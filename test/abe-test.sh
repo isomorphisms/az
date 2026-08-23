@@ -11,7 +11,8 @@ export XDG_CONFIG_HOME="$TMP/config"
 export XDG_STATE_HOME="$TMP/state"
 mkdir -p "$HOME" "$XDG_CONFIG_HOME" "$XDG_STATE_HOME" "$TMP/bin"
 
-export AZ_IMPACT_ID=12345
+# Exercise the checked-in public Impact ID, not a test override.
+unset AZ_IMPACT_ID || true
 export AZ_ABEBOOKS_CLIENT_KEY=test-client-key
 export AZ_ABEBOOKS_SEARCH_URL=https://mock/search
 export AZ_FAKE_CALLS="$TMP/curl-calls"
@@ -28,9 +29,15 @@ expect_eq() {
   [[ "$actual" == "$expected" ]] || fail "$label: expected [$expected], got [$actual]"
 }
 
+# Known Bill Hammack book from the price-search workflow.  This must generate a
+# link owned by Impact account 349003 and preserve the exact AbeBooks target.
+bill_target='https://www.abebooks.com/9780983966135/Eight-Amazing-Engineering-Stories-Using-0983966133/plp'
+bill_link='https://affiliates.abebooks.com/c/349003/77798/2029?u=https%3A%2F%2Fwww.abebooks.com%2F9780983966135%2FEight-Amazing-Engineering-Stories-Using-0983966133%2Fplp'
+expect_eq "$bill_link" "$(bash "$ABE" link "$bill_target")" 'Bill Hammack Impact link'
+
 # Link generation is useful by itself and needs no Impact API call.
 expect_eq \
-  'https://affiliates.abebooks.com/c/12345/77798/2029?u=https%3A%2F%2Fwww.abebooks.com%2Fservlet%2FBookDetailsPL%3Fbi%3D42%26x%3Dy' \
+  'https://affiliates.abebooks.com/c/349003/77798/2029?u=https%3A%2F%2Fwww.abebooks.com%2Fservlet%2FBookDetailsPL%3Fbi%3D42%26x%3Dy' \
   "$(bash "$ABE" link 'https://www.abebooks.com/servlet/BookDetailsPL?bi=42&x=y')" \
   'Impact link'
 
@@ -62,7 +69,7 @@ chmod +x "$TMP/bin/curl"
 export PATH="$TMP/bin:$PATH"
 
 result=$(bash "$ABE" 9780131457577)
-expected_link='https://affiliates.abebooks.com/c/12345/77798/2029?u=https%3A%2F%2Fwww.abebooks.com%2Fservlet%2FBookDetailsPL%3Fbi%3D22908240098%26cm_ven%3Dsws%26cm_cat%3Dsws'
+expected_link='https://affiliates.abebooks.com/c/349003/77798/2029?u=https%3A%2F%2Fwww.abebooks.com%2Fservlet%2FBookDetailsPL%3Fbi%3D22908240098%26cm_ven%3Dsws%26cm_cat%3Dsws'
 expect_eq \
   $'13.11\tUSD\tMarketing Management\t'"$expected_link" \
   "$result" \
