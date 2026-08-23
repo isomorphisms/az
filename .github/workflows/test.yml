@@ -21,3 +21,24 @@ jobs:
         run: bash -n bin/az bin/abe test/az-test.sh test/abe-test.sh
       - name: Smoke tests
         run: make test
+      - name: Live Bill Hammack Impact redirect check
+        run: |
+          target='https://www.abebooks.com/9780983966135/Eight-Amazing-Engineering-Stories-Using-0983966133/plp'
+          link=$(bash bin/abe link "$target")
+          printf 'generated=%s\n' "$link"
+          case "$link" in
+            https://affiliates.abebooks.com/c/349003/*) ;;
+            *) printf 'wrong Impact account in generated URL\n' >&2; exit 1 ;;
+          esac
+          body=$(mktemp)
+          final=$(curl -sS -L --max-redirs 10 -o "$body" -w '%{url_effective}' "$link")
+          printf 'final=%s\n' "$final"
+          case "$final" in
+            *9780983966135*) ;;
+            *)
+              if ! grep -Fqi 'Eight Amazing Engineering Stories' "$body"; then
+                printf 'affiliate URL did not resolve to the Bill Hammack book\n' >&2
+                exit 1
+              fi
+              ;;
+          esac
