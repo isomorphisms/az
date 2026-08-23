@@ -19,7 +19,8 @@ if test -f "$AZ_ABEBOOKS_CONFIG_FILE"; then
   . "$AZ_ABEBOOKS_CONFIG_FILE"
 fi
 
-: "${AZ_IMPACT_ID:=}"
+# Impact partner/account ID is public and intentionally checked in.
+: "${AZ_IMPACT_ID:=349003}"
 : "${AZ_ABEBOOKS_CLIENT_KEY:=}"
 : "${AZ_ABEBOOKS_SEARCH_URL:=https://search2.abebooks.com/search}"
 : "${AZ_ABEBOOKS_TARGETSITE:=abebooks.com}"
@@ -43,7 +44,9 @@ Examples:
 
 Configuration goes in ~/.config/az/abebooks-impact or environment variables:
   AZ_ABEBOOKS_CLIENT_KEY=...
-  AZ_IMPACT_ID=...
+
+The public Impact partner ID defaults to 349003 and is checked into this repo.
+Override AZ_IMPACT_ID only when deliberately using another Impact account.
 
 `find` asks AbeBooks Search Web Services for one result sorted by total price,
 including shipping to the configured destination country. The returned listing
