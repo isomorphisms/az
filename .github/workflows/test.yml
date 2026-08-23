@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - grease-amazon-prices
+      - abebooks-impact-links
 
 permissions:
   contents: read
@@ -17,6 +18,6 @@ jobs:
       - name: Install JSON tool
         run: sudo apt-get update && sudo apt-get install -y jq
       - name: Shell syntax
-        run: bash -n bin/az test/az-test.sh
+        run: bash -n bin/az bin/abe test/az-test.sh test/abe-test.sh
       - name: Smoke tests
         run: make test
