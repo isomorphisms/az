@@ -1,12 +1,12 @@
 #!/usr/bin/env ysh
 
-# Small Grease/YSH Amazon price tool.  The code intentionally stays in the
-# shell-and-Unix-tools layer: curl for HTTP, jq for JSON, append-only TSV for
-# observations.
+# Small Grease/YSH Amazon price tool.  Keep this in the shell-and-Unix-tools
+# layer: curl for HTTP, jq for JSON, append-only TSV for observations.
 
 set -eu
 set -o pipefail
 
+TAB=$(printf '\t')
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 REPO_DIR=$(dirname -- "$SCRIPT_DIR")
 
@@ -17,6 +17,7 @@ fi
 
 : "${AZ_MARKETPLACE:=www.amazon.com}"
 : "${AZ_PARTNER_TAG:=macguyver03-20}"
+: "${AZ_CREATORS_API_BASE:=https://creatorsapi.amazon}"
 
 CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}
 STATE_HOME=${XDG_STATE_HOME:-"$HOME/.local/state"}
@@ -35,6 +36,7 @@ fi
 : "${AZ_AMAZON_CREDENTIAL_ID:=}"
 : "${AZ_AMAZON_CREDENTIAL_SECRET:=}"
 : "${AZ_AMAZON_CREDENTIAL_VERSION:=}"
+: "${AZ_AMAZON_TOKEN_ENDPOINT:=}"
 
 usage() {
   cat <<'EOF'
@@ -44,7 +46,7 @@ usage:
   az link ASIN-OR-AMAZON-URL
   az price ASIN-OR-AMAZON-URL
   az search WORDS...
-  az history ASIN-OR-AMAZON-URL
+  az history PRODUCT-OR-AMAZON-URL
   az observe ASIN-OR-AMAZON-URL PRICE [CURRENCY] [URL]
   az record SOURCE PRODUCT PRICE CURRENCY URL [METHOD]
   az doctor
@@ -53,7 +55,7 @@ price     fetches the current featured offer through Creators API and appends
           one timestamped observation to the local price ledger.
 search    asks Creators API for up to ten products; search results are not
           automatically added to the ledger.
-observe   records a price you observed yourself.  Currency defaults to USD.
+observe   records an Amazon price you observed yourself. Currency defaults USD.
 record    writes a provider-neutral observation directly.
 
 The ledger is append-only TSV at:
@@ -94,12 +96,31 @@ extract_asin() {
   printf '%s\n' "$asin"
 }
 
+history_product() {
+  input=$1
+  case "$input" in
+    http://*|https://*) extract_asin "$input" ;;
+    *)
+      if printf '%s\n' "$input" | grep -Eq '^[[:alnum:]]{10}$'; then
+        printf '%s\n' "$input" | tr '[:lower:]' '[:upper:]'
+      else
+        printf '%s\n' "$input"
+      fi
+      ;;
+  esac
+}
+
 amazon_link() {
   asin=$(extract_asin "$1") || return
   printf 'https://%s/dp/%s?tag=%s\n' "$AZ_MARKETPLACE" "$asin" "$AZ_PARTNER_TAG"
 }
 
 credential_endpoint() {
+  if test -n "$AZ_AMAZON_TOKEN_ENDPOINT"; then
+    printf '%s\n' "$AZ_AMAZON_TOKEN_ENDPOINT"
+    return 0
+  fi
+
   case "$AZ_AMAZON_CREDENTIAL_VERSION" in
     3.1) printf '%s\n' 'https://api.amazon.com/auth/o2/token' ;;
     3.2) printf '%s\n' 'https://api.amazon.co.uk/auth/o2/token' ;;
@@ -132,7 +153,7 @@ EOF
 cached_token() {
   test -f "$AZ_TOKEN_FILE" || return 1
 
-  IFS='	' read -r expires token < "$AZ_TOKEN_FILE" || return 1
+  IFS=$TAB read -r expires token < "$AZ_TOKEN_FILE" || return 1
   case "$expires" in
     ''|*[!0-9]*) return 1 ;;
   esac
@@ -199,7 +220,7 @@ amazon_post() {
   token=$(amazon_token) || return
 
   if ! response=$(curl --fail-with-body -sS \
-      -X POST "https://creatorsapi.amazon/$operation" \
+      -X POST "$AZ_CREATORS_API_BASE/$operation" \
       -H "Authorization: Bearer $token" \
       -H 'Content-Type: application/json' \
       -H "x-marketplace: $AZ_MARKETPLACE" \
@@ -255,7 +276,7 @@ cmd_price() {
     --arg marketplace "$AZ_MARKETPLACE" \
     --arg tag "$AZ_PARTNER_TAG" \
     '{itemIds:[$asin], itemIdType:"ASIN", marketplace:$marketplace, partnerTag:$tag,
-      resources:["offersV2.listings.price","offersV2.listings.merchantInfo"]}')
+      resources:["offersV2.listings.price","offersV2.listings.isBuyBoxWinner"]}')
 
   response=$(amazon_post 'catalog/v1/getItems' "$body") || return
 
@@ -276,7 +297,7 @@ cmd_price() {
     return 3
   fi
 
-  IFS='	' read -r got_asin amount currency url <<EOF
+  IFS=$TAB read -r got_asin amount currency url <<EOF
 $row
 EOF
 
@@ -299,7 +320,7 @@ cmd_search() {
     --arg tag "$AZ_PARTNER_TAG" \
     '{keywords:$query, searchIndex:"All", itemCount:10,
       marketplace:$marketplace, partnerTag:$tag,
-      resources:["itemInfo.title","offersV2.listings.price"]}')
+      resources:["itemInfo.title","offersV2.listings.price","offersV2.listings.isBuyBoxWinner"]}')
 
   response=$(amazon_post 'catalog/v1/searchItems' "$body") || return
 
@@ -318,30 +339,26 @@ cmd_search() {
 
 cmd_history() {
   test "$#" -eq 1 || { usage >&2; return 2; }
-  asin=$(extract_asin "$1") || return
+  product=$(history_product "$1") || return
 
   if ! test -f "$AZ_PRICE_FILE"; then
     printf 'az: no price ledger yet: %s\n' "$AZ_PRICE_FILE" >&2
     return 0
   fi
 
-  awk -F '\t' -v product="$asin" 'NR == 1 || $4 == product' "$AZ_PRICE_FILE"
+  awk -F "$TAB" -v product="$product" 'NR == 1 || $4 == product' "$AZ_PRICE_FILE"
 }
 
 cmd_observe() {
   test "$#" -ge 2 && test "$#" -le 4 || { usage >&2; return 2; }
-  original=$1
-  asin=$(extract_asin "$original") || return
+  asin=$(extract_asin "$1") || return
   amount=$2
   currency=${3:-USD}
 
   if test "$#" -ge 4; then
     url=$4
   else
-    case "$original" in
-      http://*|https://*) url=$original ;;
-      *) url=$(amazon_link "$asin") ;;
-    esac
+    url=$(amazon_link "$asin")
   fi
 
   observed_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
