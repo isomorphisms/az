@@ -79,11 +79,25 @@ grep -F 'sortorder=17' "$AZ_FAKE_CALLS" >/dev/null || fail 'sortorder=17 not sen
 grep -F 'destinationcountry=USA' "$AZ_FAKE_CALLS" >/dev/null || fail 'USA destination not sent'
 grep -F 'maxresults=1' "$AZ_FAKE_CALLS" >/dev/null || fail 'maxresults=1 not sent'
 grep -F 'isbn=9780131457577' "$AZ_FAKE_CALLS" >/dev/null || fail 'ISBN search not sent'
+if grep -F 'bookcondition=' "$AZ_FAKE_CALLS" >/dev/null; then
+  fail 'unfiltered lookup unexpectedly sent bookcondition'
+fi
 
 PRICE_FILE="$XDG_STATE_HOME/az/prices.tsv"
 [[ -f "$PRICE_FILE" ]] || fail 'price ledger was not created'
 grep -F $'www.abebooks.com\tabebooks-sws\tisbn:9780131457577\t13.11\tUSD\t'"$expected_link" "$PRICE_FILE" >/dev/null ||
   fail 'AbeBooks result was not recorded'
+
+: > "$AZ_FAKE_CALLS"
+used_result=$(bash "$ABE" used 9780131457577)
+expect_eq \
+  $'13.11\tUSD\tMarketing Management\t'"$expected_link" \
+  "$used_result" \
+  'cheapest delivered used result'
+grep -F 'bookcondition=used' "$AZ_FAKE_CALLS" >/dev/null || fail 'used condition not sent'
+grep -F 'sortorder=17' "$AZ_FAKE_CALLS" >/dev/null || fail 'used lookup lost delivered-price sort'
+grep -F $'www.abebooks.com\tabebooks-sws-used\tisbn:9780131457577\t13.11\tUSD\t'"$expected_link" "$PRICE_FILE" >/dev/null ||
+  fail 'used AbeBooks result was not recorded distinctly'
 
 : > "$AZ_FAKE_CALLS"
 bash "$ABE" Marketing Management >/dev/null
