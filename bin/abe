@@ -34,11 +34,13 @@ abe -- cheapest delivered AbeBooks listing with Impact affiliate link
 usage:
   abe ISBN-OR-TITLE...
   abe find ISBN-OR-TITLE...
+  abe used ISBN-OR-TITLE...
   abe link ABEBOOKS-URL
   abe doctor
 
 Examples:
   abe 9780131457577
+  abe used 9780131457577
   abe 'Marketing Management'
   abe link 'https://www.abebooks.com/servlet/BookDetailsPL?bi=22908240098'
 
@@ -49,8 +51,9 @@ The public Impact partner ID defaults to 349003 and is checked into this repo.
 Override AZ_IMPACT_ID only when deliberately using another Impact account.
 
 `find` asks AbeBooks Search Web Services for one result sorted by total price,
-including shipping to the configured destination country. The returned listing
-URL is wrapped in AbeBooks' documented Impact link format.
+including shipping to the configured destination country. `used` makes the
+same query with AbeBooks' bookcondition=used filter. The returned listing URL
+is wrapped in AbeBooks' documented Impact link format.
 EOF
 }
 
@@ -126,6 +129,7 @@ record_observation() {
   amount=$3
   currency=$4
   buy_url=$5
+  method=${6:-abebooks-sws}
 
   mkdir -p "$AZ_STATE_DIR"
   if ! test -f "$AZ_PRICE_FILE"; then
@@ -135,7 +139,7 @@ record_observation() {
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
     "$(safe_field "$observed_at")" \
     'www.abebooks.com' \
-    'abebooks-sws' \
+    "$(safe_field "$method")" \
     "$(safe_field "$product")" \
     "$(safe_field "$amount")" \
     "$(safe_field "$currency")" \
@@ -160,6 +164,35 @@ search_field_and_value() {
   printf 'title\t%s\n' "$latin1"
 }
 
+run_search() {
+  search_field=$1
+  search_value=$2
+  book_condition=${3:-}
+
+  if test -n "$book_condition"; then
+    curl --fail-with-body -sS -G "$AZ_ABEBOOKS_SEARCH_URL" \
+      --data-urlencode "clientkey=$AZ_ABEBOOKS_CLIENT_KEY" \
+      --data-urlencode "targetsite=$AZ_ABEBOOKS_TARGETSITE" \
+      --data-urlencode "destinationcountry=$AZ_ABEBOOKS_DESTINATION_COUNTRY" \
+      --data-urlencode "currency=$AZ_ABEBOOKS_CURRENCY" \
+      --data-urlencode 'sortorder=17' \
+      --data-urlencode 'maxresults=1' \
+      --data-urlencode 'outputsize=short' \
+      --data-urlencode "bookcondition=$book_condition" \
+      --data-urlencode "$search_field=$search_value"
+  else
+    curl --fail-with-body -sS -G "$AZ_ABEBOOKS_SEARCH_URL" \
+      --data-urlencode "clientkey=$AZ_ABEBOOKS_CLIENT_KEY" \
+      --data-urlencode "targetsite=$AZ_ABEBOOKS_TARGETSITE" \
+      --data-urlencode "destinationcountry=$AZ_ABEBOOKS_DESTINATION_COUNTRY" \
+      --data-urlencode "currency=$AZ_ABEBOOKS_CURRENCY" \
+      --data-urlencode 'sortorder=17' \
+      --data-urlencode 'maxresults=1' \
+      --data-urlencode 'outputsize=short' \
+      --data-urlencode "$search_field=$search_value"
+  fi
+}
+
 cmd_link() {
   test "$#" -eq 1 || { usage >&2; return 2; }
   affiliate_link "$1"
@@ -177,16 +210,9 @@ cmd_find() {
   field_value=$(search_field_and_value "$query") || return
   search_field=${field_value%%"$TAB"*}
   search_value=${field_value#*"$TAB"}
+  book_condition=${AZ_ABEBOOKS_BOOKCONDITION:-}
 
-  if ! response=$(curl --fail-with-body -sS -G "$AZ_ABEBOOKS_SEARCH_URL" \
-      --data-urlencode "clientkey=$AZ_ABEBOOKS_CLIENT_KEY" \
-      --data-urlencode "targetsite=$AZ_ABEBOOKS_TARGETSITE" \
-      --data-urlencode "destinationcountry=$AZ_ABEBOOKS_DESTINATION_COUNTRY" \
-      --data-urlencode "currency=$AZ_ABEBOOKS_CURRENCY" \
-      --data-urlencode 'sortorder=17' \
-      --data-urlencode 'maxresults=1' \
-      --data-urlencode 'outputsize=short' \
-      --data-urlencode "$search_field=$search_value"); then
+  if ! response=$(run_search "$search_field" "$search_value" "$book_condition"); then
     printf 'abe: AbeBooks search request failed\n' >&2
     return 1
   fi
@@ -223,7 +249,11 @@ cmd_find() {
 
   buy_url=$(affiliate_link "$listing_url") || return
   observed_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
-  record_observation "$observed_at" "$product" "$total" "$AZ_ABEBOOKS_CURRENCY" "$buy_url"
+  observation_method=abebooks-sws
+  if test "$book_condition" = used; then
+    observation_method=abebooks-sws-used
+  fi
+  record_observation "$observed_at" "$product" "$total" "$AZ_ABEBOOKS_CURRENCY" "$buy_url" "$observation_method"
 
   printf '%s\t%s\t%s\t%s\n' \
     "$total" "$AZ_ABEBOOKS_CURRENCY" "$title" "$buy_url"
@@ -269,6 +299,10 @@ case "$command" in
   find)
     shift
     cmd_find "$@"
+    ;;
+  used)
+    shift
+    AZ_ABEBOOKS_BOOKCONDITION=used cmd_find "$@"
     ;;
   link)
     shift
