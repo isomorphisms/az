@@ -23,11 +23,21 @@ ysh bin/az observe B012345678 19.99
 ysh bin/az price B012345678
 ysh bin/az search 'K&R C programming'
 ysh bin/az history B012345678
+
+# Once the AbeBooks client key is configured:
+ysh bin/abe 9780131457577
+ysh bin/abe used 9780131457577
 ```
 
 `price` uses Amazon Creators API `GetItems` with `OffersV2` and appends one row
 to the price ledger. `search` uses `SearchItems` and prints results without
 silently filling the ledger with every search result.
+
+`abe` asks AbeBooks Search Web Services for the cheapest delivered listing,
+including shipping to the configured destination. `abe used` adds AbeBooks'
+`bookcondition=used` filter, so the result is specifically the cheapest
+delivered used listing rather than merely the cheapest listing of any
+condition. Used observations are recorded with method `abebooks-sws-used`.
 
 The local ledger is append-only TSV:
 
