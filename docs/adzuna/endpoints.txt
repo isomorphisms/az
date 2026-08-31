@@ -1,0 +1,19 @@
+# Adzuna Jobs API endpoint inventory
+# Verified 2026-08-31 against https://developer.adzuna.com/
+# API root: https://api.adzuna.com/v1/api
+# Every call requires app_id and app_key.
+
+GET https://api.adzuna.com/v1/api/jobs/{country}/search/{page}
+GET https://api.adzuna.com/v1/api/jobs/{country}/history
+GET https://api.adzuna.com/v1/api/jobs/{country}/histogram
+GET https://api.adzuna.com/v1/api/jobs/{country}/geodata
+GET https://api.adzuna.com/v1/api/jobs/{country}/top_companies
+GET https://api.adzuna.com/v1/api/jobs/{country}/categories
+GET https://api.adzuna.com/v1/api/jobs/{country}/jobsworth
+GET https://api.adzuna.com/v1/api/jobs/{country}/version
+
+# Documentation discrepancy:
+# Adzuna's overview says the REST API has nine endpoints, but its current
+# navigable prose documentation identifies the eight route families above.
+# The interactive OpenAPI/Swagger definition was not loadable during this
+# inventory, so no ninth endpoint is invented here.
