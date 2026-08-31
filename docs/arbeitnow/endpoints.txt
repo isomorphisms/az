@@ -1,0 +1,5 @@
+# Arbeitnow API endpoint inventory
+# Verified 2026-08-31 against https://www.arbeitnow.com/blog/job-board-api
+
+GET https://www.arbeitnow.com/api/job-board-api
+GET https://www.arbeitnow.co.uk/api/job-board-api
