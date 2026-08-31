@@ -1,0 +1,14 @@
+# The Muse API endpoint inventory
+# Verified 2026-08-31 against https://www.themuse.com/developers
+# and live requests to the public API.
+
+# Confirmed live job endpoint
+GET https://www.themuse.com/api/public/jobs
+
+# The current API Terms say the API also provides companies, coaches and posts.
+# Historical/current route shapes below were probed but returned server errors
+# during this inventory, so they are retained as UNVERIFIED rather than claimed
+# as working endpoints:
+UNVERIFIED GET https://www.themuse.com/api/public/companies
+UNVERIFIED GET https://www.themuse.com/api/public/coaches
+UNVERIFIED GET https://www.themuse.com/api/public/posts
