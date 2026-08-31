@@ -28,29 +28,29 @@ def live_blocked() → int:
 def main() → int:
     arguments ∈ list[str] ← sys.argv
 
-    if len(arguments) = 4 and arguments[1] = "articles":
+    if len(arguments) == 4 and arguments[1] == "articles":
         sys.stdout.write(articles_url(arguments[2], arguments[3]) + "\n")
         return 0
-    if len(arguments) = 3 and arguments[1] = "article":
+    if len(arguments) == 3 and arguments[1] == "article":
         sys.stdout.write(BASE + "/v1/articles/" + arguments[2] + "\n")
         return 0
-    if len(arguments) = 2 and arguments[1] = "sections":
+    if len(arguments) == 2 and arguments[1] == "sections":
         sys.stdout.write(BASE + "/v1/sections\n")
         return 0
-    if len(arguments) = 2 and arguments[1] = "tags":
+    if len(arguments) == 2 and arguments[1] == "tags":
         sys.stdout.write(BASE + "/v1/tags\n")
         return 0
-    if len(arguments) = 2 and arguments[1] = "brief":
+    if len(arguments) == 2 and arguments[1] == "brief":
         sys.stdout.write(BASE + "/v1/the-world-in-brief\n")
         return 0
-    if len(arguments) = 2 and arguments[1] = "login-body":
+    if len(arguments) == 2 and arguments[1] == "login-body":
         client_id ∈ str ← os.environ.get("ECONOMIST_CLIENT_ID", "")
         client_secret ∈ str ← os.environ.get("ECONOMIST_CLIENT_SECRET", "")
-        if client_id = "" or client_secret = "":
+        if client_id == "" or client_secret == "":
             raise RuntimeError("economist: missing credentials")
         sys.stdout.write("{\"client_id\":\"" + client_id + "\",\"client_secret\":\"" + client_secret + "\"}\n")
         return 0
-    if len(arguments) ≥ 2 and arguments[1] = "live":
+    if len(arguments) >= 2 and arguments[1] == "live":
         return live_blocked()
 
     sys.stderr.write(USAGE + "\n")
