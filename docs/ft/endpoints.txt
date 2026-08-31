@@ -1,0 +1,3 @@
+POST https://api.ft.com/content/search/v1
+GET https://api.ft.com/content/{uuid}
+GET https://api.ft.com/content/notifications
