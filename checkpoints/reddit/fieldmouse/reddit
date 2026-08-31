@@ -39,11 +39,11 @@ if (command = "url") {
       // Do not make an unauthenticated request and call it success. ICU can GET
       // today, but it cannot yet represent the Authorization and User-Agent
       // request headers Reddit requires. `run` is also not implemented in the
-      // current Fieldmouse process surface.
+      // current Fieldmouse process surface. The credential values are read only
+      // to exercise environment access; never print them in checkpoint output.
       console.log("WATCHPOINT Fieldmouse run/environment + ICU request headers");
       console.log(url);
-      console.log(token);
-      console.log(user_agent);
+      console.log("credentials present; values intentionally hidden");
     } else {
       console.log("usage: reddit {url QUERY | fixture FILE | search QUERY}");
     }
