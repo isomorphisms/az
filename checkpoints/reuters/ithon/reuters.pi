@@ -11,7 +11,7 @@ USAGE ∈ str ← "usage: reuters {endpoint | body QUERY_FILE | live QUERY_FILE}
 
 def endpoint() → str:
     value ∈ str ← os.environ.get("REUTERS_GRAPHQL_URL", "")
-    if value = "":
+    if value == "":
         raise RuntimeError("reuters: missing REUTERS_GRAPHQL_URL")
     return value
 
@@ -41,13 +41,13 @@ def live(path_text ∈ str) → int:
 def main() → int:
     arguments ∈ list[str] ← sys.argv
 
-    if len(arguments) = 2 and arguments[1] = "endpoint":
+    if len(arguments) == 2 and arguments[1] == "endpoint":
         sys.stdout.write(endpoint() + "\n")
         return 0
-    if len(arguments) = 3 and arguments[1] = "body":
+    if len(arguments) == 3 and arguments[1] == "body":
         sys.stdout.write(request_body(query_text(arguments[2])) + "\n")
         return 0
-    if len(arguments) = 3 and arguments[1] = "live":
+    if len(arguments) == 3 and arguments[1] == "live":
         return live(arguments[2])
 
     sys.stderr.write(USAGE + "\n")
