@@ -17,7 +17,7 @@ def encode(text ∈ str) → str:
 
 def key() → str:
     value ∈ str ← os.environ.get("NYT_API_KEY", "")
-    if value = "":
+    if value == "":
         raise RuntimeError("nyt: missing NYT_API_KEY")
     return value
 
@@ -42,22 +42,22 @@ def main() → int:
     arguments ∈ list[str] ← sys.argv
     api_key ∈ str ← key()
 
-    if len(arguments) = 3 and arguments[1] = "url":
+    if len(arguments) == 3 and arguments[1] == "url":
         sys.stdout.write(search_url(arguments[2], api_key) + "\n")
         return 0
 
-    if len(arguments) = 3 and arguments[1] = "search":
+    if len(arguments) == 3 and arguments[1] == "search":
         return icu_get(search_url(arguments[2], api_key))
 
-    if len(arguments) = 4 and arguments[1] = "archive":
+    if len(arguments) == 4 and arguments[1] == "archive":
         url ∈ str ← "https://api.nytimes.com/svc/archive/v1/" + arguments[2] + "/" + arguments[3] + ".json"
         return icu_get(add_key(url, api_key))
 
-    if len(arguments) = 3 and arguments[1] = "top":
+    if len(arguments) == 3 and arguments[1] == "top":
         url ∈ str ← "https://api.nytimes.com/svc/topstories/v2/" + encode(arguments[2]) + ".json"
         return icu_get(add_key(url, api_key))
 
-    if len(arguments) = 4 and arguments[1] = "wire":
+    if len(arguments) == 4 and arguments[1] == "wire":
         url ∈ str ← "https://api.nytimes.com/svc/news/v3/content/" + encode(arguments[2]) + "/" + encode(arguments[3]) + ".json"
         return icu_get(add_key(url, api_key))
 
