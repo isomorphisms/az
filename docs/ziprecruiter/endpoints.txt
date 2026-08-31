@@ -1,0 +1,63 @@
+# ZipRecruiter Partner API endpoint inventory
+# Verified 2026-08-31 against https://www.ziprecruiter.com/partner/documentation/
+#
+# IMPORTANT: the current documented API surface is a PARTNER integration
+# toolkit for posting/managing jobs, applications, hiring signals, sponsorship,
+# and campaigns. It is not an anonymous public ZipRecruiter job-search API.
+
+# Jobs API
+POST   https://api.ziprecruiter.com/partner/v0/job
+PUT    https://api.ziprecruiter.com/partner/v0/job
+PUT    https://api.ziprecruiter.com/partner/v0/job/{JOB_ID}
+GET    https://api.ziprecruiter.com/partner/v0/job/{JOB_ID}
+DELETE https://api.ziprecruiter.com/partner/v0/job/{JOB_ID}
+
+# Questions API
+POST   https://api.ziprecruiter.com/partner/v0/job/{JOB_ID}/questions
+PUT    https://api.ziprecruiter.com/partner/v0/job/{JOB_ID}/questions
+GET    https://api.ziprecruiter.com/partner/v0/job/{JOB_ID}/questions
+DELETE https://api.ziprecruiter.com/partner/v0/job/{JOB_ID}/questions
+
+# Features API
+POST https://api.ziprecruiter.com/partner/v0/job/{JOB_ID}/features
+GET  https://api.ziprecruiter.com/partner/v0/job/{JOB_ID}/features
+
+# Hiring Signals API
+POST https://api.ziprecruiter.com/hiring-signal/v0/event
+
+# Embedded Sponsorship API - documented v0 server routes
+POST https://api.ziprecruiter.com/ats-embed/v0/api/token
+POST https://api.ziprecruiter.com/ats-embed/v0/api/sponsored_status
+GET  https://api.ziprecruiter.com/ats-embed/v0/?jobId={JOB_ID}&token={TOKEN}
+GET  https://api.ziprecruiter.com/ats-embed/v0/manage?jobId={JOB_ID}&token={TOKEN}
+
+# Embedded Sponsorship API - v1 equivalent API routes used by current v1 SDK
+POST https://api.ziprecruiter.com/ats-embed/v1/api/token
+POST https://api.ziprecruiter.com/ats-embed/v1/api/sponsored_status
+
+# Sponsorship JavaScript SDK resources
+GET https://api.ziprecruiter.com/ats-embed/v1/sdk.js
+GET https://api.ziprecruiter.com/ats-embed/v0/sdk.js
+
+# Campaign Management API
+GET  https://api.ziprecruiter.com/campaign-manager/v1/ping
+GET  https://api.ziprecruiter.com/campaign-manager/v1/accounts
+GET  https://api.ziprecruiter.com/campaign-manager/v1/account/{accountId}
+GET  https://api.ziprecruiter.com/campaign-manager/v1/account/{accountId}/campaigns
+POST https://api.ziprecruiter.com/campaign-manager/v1/account/{accountId}/campaign
+GET  https://api.ziprecruiter.com/campaign-manager/v1/account/{accountId}/campaign/{campaignId}
+PUT  https://api.ziprecruiter.com/campaign-manager/v1/account/{accountId}/campaign/{campaignId}
+GET  https://api.ziprecruiter.com/campaign-manager/v1/account/{accountId}/campaign/{campaignId}/budget
+POST https://api.ziprecruiter.com/campaign-manager/v1/account/{accountId}/campaign/{campaignId}/budget
+GET  https://api.ziprecruiter.com/campaign-manager/v1/account/{accountId}/campaign/{campaignId}/budgets
+GET  https://api.ziprecruiter.com/campaign-manager/v1/account/{accountId}/campaign/{campaignId}/budget/{budgetId}
+PUT  https://api.ziprecruiter.com/campaign-manager/v1/account/{accountId}/campaign/{campaignId}/budget/{budgetId}
+
+# Campaign conversion reporting
+GET https://track.ziprecruiter.com/marketplace/v1/conversion
+
+# Partner-hosted / callback protocols with NO fixed ZipRecruiter request endpoint:
+# - Apply Webhook: ZipRecruiter POSTs to one HTTPS URL supplied by the partner.
+# - RDB Integration: ZipRecruiter POSTs to an HTTPS URL supplied by the partner.
+# - XML Feed Import: ZipRecruiter pulls a partner-hosted HTTP(S)/FTP feed URL.
+# - click/conversion CSV feeds: pushed to partner-provided (S)FTP.
