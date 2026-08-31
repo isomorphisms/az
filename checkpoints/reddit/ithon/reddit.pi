@@ -17,15 +17,12 @@ USAGE ∈ str ← "usage: reddit {url QUERY | fixture FILE | search QUERY}"
 
 
 def search_url(query ∈ str) → str:
-    parameters ∈ dict[str, str] ← {
-        "raw_json": "1",
-        "limit": str(LIMIT),
-        "sort": "relevance",
-        "t": "all",
-        "q": query,
-    }
-    encoded ∈ str ← urllib.parse.urlencode(parameters)
-    return API_BASE + "?" + encoded
+    encoded ∈ str ← urllib.parse.quote(query, "")
+    return (
+        API_BASE +
+        "?raw_json=1&limit=" + str(LIMIT) +
+        "&sort=relevance&t=all&q=" + encoded
+    )
 
 
 def clean_field(text ∈ str) → str:
