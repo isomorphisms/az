@@ -1,0 +1,166 @@
+#!/usr/bin/env ithon
+
+import http.client
+import json
+import os
+import sys
+import urllib.parse
+import urllib.request
+from pathlib import Path
+from typing import cast
+
+
+API_BASE ∈ str ← "https://oauth.reddit.com/search"
+LIMIT ∈ int ← 25
+HEADER ∈ str ← "created_utc\tscore\tsubreddit\tauthor\ttitle\tpermalink"
+USAGE ∈ str ← "usage: reddit {url QUERY | fixture FILE | search QUERY}"
+
+
+def search_url(query ∈ str) → str:
+    parameters ∈ dict[str, str] ← {
+        "raw_json": "1",
+        "limit": str(LIMIT),
+        "sort": "relevance",
+        "t": "all",
+        "q": query,
+    }
+    encoded ∈ str ← urllib.parse.urlencode(parameters)
+    return API_BASE + "?" + encoded
+
+
+def clean_field(text ∈ str) → str:
+    flattened ∈ str ← text.replace("\t", " ")
+    flattened ← flattened.replace("\r", " ")
+    flattened ← flattened.replace("\n", " ")
+    return flattened
+
+
+def as_dict(value ∈ object) → dict[str, object]:
+    return cast(dict[str, object], value)
+
+
+def as_list(value ∈ object) → list[object]:
+    return cast(list[object], value)
+
+
+def field_text(record ∈ dict[str, object], name ∈ str) → str:
+    return str(record[name])
+
+
+def field_int(record ∈ dict[str, object], name ∈ str) → int:
+    return int(record[name])
+
+
+def render_listing(body ∈ str) → str:
+    # json.loads is deliberately an explicit foreign-library boundary. Ithon
+    # should either accept this object boundary or give a focused static error;
+    # it must not silently introduce Any.
+    decoded ∈ object ← json.loads(body)
+    root ∈ dict[str, object] ← as_dict(decoded)
+    listing_data ∈ dict[str, object] ← as_dict(root["data"])
+    children ∈ list[object] ← as_list(listing_data["children"])
+
+    lines ∈ list[str] ← [HEADER]
+
+    for child_value in children:
+        child ∈ dict[str, object] ← as_dict(child_value)
+        post ∈ dict[str, object] ← as_dict(child["data"])
+
+        created_utc ∈ str ← str(field_int(post, "created_utc"))
+        score ∈ str ← str(field_int(post, "score"))
+        subreddit ∈ str ← clean_field(field_text(post, "subreddit"))
+        author ∈ str ← clean_field(field_text(post, "author"))
+        title ∈ str ← clean_field(field_text(post, "title"))
+        permalink ∈ str ← clean_field(field_text(post, "permalink"))
+
+        if permalink.startswith("/"):
+            permalink ← "https://www.reddit.com" + permalink
+
+        line ∈ str ← (
+            created_utc + "\t" +
+            score + "\t" +
+            subreddit + "\t" +
+            author + "\t" +
+            title + "\t" +
+            permalink
+        )
+        lines.append(line)
+
+    return "\n".join(lines) + "\n"
+
+
+def read_fixture(path_text ∈ str) → str:
+    path ∈ Path ← Path(path_text)
+    return path.read_text("utf-8")
+
+
+def require_environment(name ∈ str) → str:
+    value ∈ str ← os.environ.get(name, "")
+    if value = "":
+        raise RuntimeError("reddit: missing environment variable: " + name)
+    return value
+
+
+def fetch_search(query ∈ str) → str:
+    token ∈ str ← require_environment("REDDIT_ACCESS_TOKEN")
+    user_agent ∈ str ← require_environment("REDDIT_USER_AGENT")
+    url ∈ str ← search_url(query)
+
+    headers ∈ dict[str, str] ← {
+        "Authorization": "Bearer " + token,
+        "User-Agent": user_agent,
+        "Accept": "application/json",
+    }
+
+    # These annotations are intentional Ithon watchpoints around the foreign
+    # urllib boundary. If the checker cannot validate them, fail there rather
+    # than degrading this whole module to dynamic Python.
+    request ∈ urllib.request.Request ← urllib.request.Request(
+        url,
+        None,
+        headers,
+        None,
+        False,
+        "GET",
+    )
+    response ∈ http.client.HTTPResponse ← urllib.request.urlopen(
+        request,
+        None,
+        30.0,
+    )
+    raw ∈ bytes ← response.read()
+    response.close()
+    return raw.decode("utf-8")
+
+
+def run(command ∈ str, operand ∈ str) → int:
+    if command = "url":
+        sys.stdout.write(search_url(operand) + "\n")
+        return 0
+
+    if command = "fixture":
+        body ∈ str ← read_fixture(operand)
+        sys.stdout.write(render_listing(body))
+        return 0
+
+    if command = "search":
+        body ∈ str ← fetch_search(operand)
+        sys.stdout.write(render_listing(body))
+        return 0
+
+    sys.stderr.write(USAGE + "\n")
+    return 2
+
+
+def main() → int:
+    arguments ∈ list[str] ← sys.argv
+    if len(arguments) ≠ 3:
+        sys.stderr.write(USAGE + "\n")
+        return 2
+
+    command ∈ str ← arguments[1]
+    operand ∈ str ← arguments[2]
+    return run(command, operand)
+
+
+raise SystemExit(main())
