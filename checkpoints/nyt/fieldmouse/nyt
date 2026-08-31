@@ -1,0 +1,21 @@
+// Fieldmouse NYT checkpoint.
+// Current missing surfaces are useful watchpoints: arguments, environment,
+// percentEncode, process execution, and status/stdout forwarding.
+
+var command ← arguments(1);
+var operand ← arguments(2);
+var api_key ← environment("NYT_API_KEY");
+var icu ← environmentDefault("ICU", "icu");
+
+if (command = "url") {
+  var url ← "https://api.nytimes.com/svc/search/v2/articlesearch.json?q=" + percentEncode(operand) + "&sort=oldest&api-key=" + percentEncode(api_key);
+  console.log(url);
+} else {
+  if (command = "search") {
+    var url ← "https://api.nytimes.com/svc/search/v2/articlesearch.json?q=" + percentEncode(operand) + "&sort=oldest&api-key=" + percentEncode(api_key);
+    // ICU is intentional. Do not replace this with Node fetch.
+    run(icu, ["get", url]);
+  } else {
+    console.log("usage: nyt {url QUERY | search QUERY | archive YEAR MONTH | top SECTION | wire SOURCE SECTION}");
+  }
+}
