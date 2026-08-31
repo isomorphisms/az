@@ -1,0 +1,25 @@
+# Reed.co.uk API endpoint inventory
+# Verified 2026-08-31 against https://www.reed.co.uk/developers/
+
+# Jobseeker API (current)
+GET https://www.reed.co.uk/api/1.0/search
+GET https://www.reed.co.uk/api/1.0/jobs/{jobId}
+
+# Recruiter job-posting API v1 (official page labels these legacy/deprecated)
+POST https://www.reed.co.uk/recruiter/api/1.0/jobs
+PUT https://www.reed.co.uk/recruiter/api/1.0/jobs/update/{jobId}
+PUT https://www.reed.co.uk/recruiter/api/1.0/jobs/extend/{jobId}
+PUT https://www.reed.co.uk/recruiter/api/1.0/jobs/end/{jobId}
+PUT https://www.reed.co.uk/recruiter/api/1.0/jobs/relist/{jobId}
+
+# Recruiter CV Search API (restricted; access not provided as standard)
+GET https://www.reed.co.uk/recruiter/api/1.0/cvsearch
+GET https://www.reed.co.uk/recruiter/api/1.0/cvsearch/candidate/{candidateId}/preview
+GET https://www.reed.co.uk/recruiter/api/1.0/cvsearch/cv/{candidateId}
+GET https://www.reed.co.uk/recruiter/api/1.0/cvsearch/candidate/{candidateId}
+GET https://www.reed.co.uk/recruiter/api/1.0/cvsearch/downloadlimits
+GET https://www.reed.co.uk/recruiter/api/1.0/cvsearch/searchavailability
+
+# Reed's current recruiter page points to a newer API V2 at
+# https://www.reed.co.uk/api/documentation/ . Its endpoint reference was not
+# retrievable during this inventory, so no V2 routes are guessed here.
