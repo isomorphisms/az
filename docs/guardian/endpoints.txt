@@ -1,0 +1,5 @@
+GET https://content.guardianapis.com/search
+GET https://content.guardianapis.com/tags
+GET https://content.guardianapis.com/sections
+GET https://content.guardianapis.com/editions
+GET https://content.guardianapis.com/{content-id}
