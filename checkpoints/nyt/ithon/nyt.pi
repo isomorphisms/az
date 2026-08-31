@@ -1,0 +1,68 @@
+#!/usr/bin/env ithon
+
+import os
+import subprocess
+import sys
+import urllib.parse
+
+
+ICU ∈ str ← os.environ.get("ICU", "icu")
+ARTICLE_SEARCH ∈ str ← "https://api.nytimes.com/svc/search/v2/articlesearch.json"
+USAGE ∈ str ← "usage: nyt {url QUERY | search QUERY | archive YEAR MONTH | top SECTION | wire SOURCE SECTION}"
+
+
+def encode(text ∈ str) → str:
+    return urllib.parse.quote(text, "")
+
+
+def key() → str:
+    value ∈ str ← os.environ.get("NYT_API_KEY", "")
+    if value = "":
+        raise RuntimeError("nyt: missing NYT_API_KEY")
+    return value
+
+
+def add_key(url ∈ str, api_key ∈ str) → str:
+    joiner ∈ str ← "?"
+    if "?" in url:
+        joiner ← "&"
+    return url + joiner + "api-key=" + encode(api_key)
+
+
+def search_url(query ∈ str, api_key ∈ str) → str:
+    return add_key(ARTICLE_SEARCH + "?q=" + encode(query) + "&sort=oldest", api_key)
+
+
+def icu_get(url ∈ str) → int:
+    # Deliberately use the Idriç ICU client rather than urllib for the request.
+    return subprocess.call([ICU, "get", url])
+
+
+def main() → int:
+    arguments ∈ list[str] ← sys.argv
+    api_key ∈ str ← key()
+
+    if len(arguments) = 3 and arguments[1] = "url":
+        sys.stdout.write(search_url(arguments[2], api_key) + "\n")
+        return 0
+
+    if len(arguments) = 3 and arguments[1] = "search":
+        return icu_get(search_url(arguments[2], api_key))
+
+    if len(arguments) = 4 and arguments[1] = "archive":
+        url ∈ str ← "https://api.nytimes.com/svc/archive/v1/" + arguments[2] + "/" + arguments[3] + ".json"
+        return icu_get(add_key(url, api_key))
+
+    if len(arguments) = 3 and arguments[1] = "top":
+        url ∈ str ← "https://api.nytimes.com/svc/topstories/v2/" + encode(arguments[2]) + ".json"
+        return icu_get(add_key(url, api_key))
+
+    if len(arguments) = 4 and arguments[1] = "wire":
+        url ∈ str ← "https://api.nytimes.com/svc/news/v3/content/" + encode(arguments[2]) + "/" + encode(arguments[3]) + ".json"
+        return icu_get(add_key(url, api_key))
+
+    sys.stderr.write(USAGE + "\n")
+    return 2
+
+
+raise SystemExit(main())
