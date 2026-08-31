@@ -91,7 +91,7 @@ def read_fixture(path_text ∈ str) → str:
 
 def require_environment(name ∈ str) → str:
     value ∈ str ← os.environ.get(name, "")
-    if value = "":
+    if value == "":
         raise RuntimeError("reddit: missing environment variable: " + name)
     return value
 
@@ -110,16 +110,16 @@ def live_search(query ∈ str) → int:
 
 
 def run(command ∈ str, operand ∈ str) → int:
-    if command = "url":
+    if command == "url":
         sys.stdout.write(search_url(operand) + "\n")
         return 0
 
-    if command = "fixture":
+    if command == "fixture":
         body ∈ str ← read_fixture(operand)
         sys.stdout.write(render_listing(body))
         return 0
 
-    if command = "search":
+    if command == "search":
         return live_search(operand)
 
     sys.stderr.write(USAGE + "\n")
@@ -128,7 +128,7 @@ def run(command ∈ str, operand ∈ str) → int:
 
 def main() → int:
     arguments ∈ list[str] ← sys.argv
-    if len(arguments) ≠ 3:
+    if len(arguments) != 3:
         sys.stderr.write(USAGE + "\n")
         return 2
 
