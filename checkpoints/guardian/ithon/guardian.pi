@@ -16,7 +16,7 @@ def encode(text ∈ str) → str:
 
 def key() → str:
     value ∈ str ← os.environ.get("GUARDIAN_API_KEY", "")
-    if value = "":
+    if value == "":
         raise RuntimeError("guardian: missing GUARDIAN_API_KEY")
     return value
 
@@ -35,7 +35,7 @@ def search_url(query ∈ str, api_key ∈ str) → str:
 
 def main() → int:
     arguments ∈ list[str] ← sys.argv
-    if len(arguments) ≠ 3:
+    if len(arguments) != 3:
         sys.stderr.write(USAGE + "\n")
         return 2
 
@@ -43,18 +43,18 @@ def main() → int:
     operand ∈ str ← arguments[2]
     api_key ∈ str ← key()
 
-    if command = "url":
+    if command == "url":
         sys.stdout.write(search_url(operand, api_key) + "\n")
         return 0
-    if command = "search":
+    if command == "search":
         return icu_get(search_url(operand, api_key))
-    if command = "tags":
+    if command == "tags":
         return icu_get(keyed("https://content.guardianapis.com/tags?q=" + encode(operand), api_key))
-    if command = "sections":
+    if command == "sections":
         return icu_get(keyed("https://content.guardianapis.com/sections?q=" + encode(operand), api_key))
-    if command = "editions":
+    if command == "editions":
         return icu_get(keyed("https://content.guardianapis.com/editions?q=" + encode(operand), api_key))
-    if command = "item":
+    if command == "item":
         return icu_get(keyed("https://content.guardianapis.com/" + operand + "?show-fields=all", api_key))
 
     sys.stderr.write(USAGE + "\n")
