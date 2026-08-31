@@ -37,6 +37,14 @@ skip() {
   printf 'SKIP\t%s\n' "$1"
 }
 
+show_diagnostics() {
+  for path in "$@"; do
+    if test -s "$path"; then
+      sed 's/^/  /' "$path"
+    fi
+  done
+}
+
 check_ithon() {
   if ! available "$ITHON"; then
     skip "ithon (not found: $ITHON)"
@@ -51,10 +59,11 @@ check_ithon() {
       pass 'ithon/url'
     else
       fail 'ithon/url output'
+      show_diagnostics "$TMP/ithon-url"
     fi
   else
     fail 'ithon/url check or execution'
-    sed 's/^/  /' "$TMP/ithon-url.err"
+    show_diagnostics "$TMP/ithon-url" "$TMP/ithon-url.err"
   fi
 
   if ITHON_CHECK_RECEIPT="$TMP/ithon-receipt.jsonl" \
@@ -69,7 +78,13 @@ check_ithon() {
     fi
   else
     fail 'ithon/fixture check or execution'
-    sed 's/^/  /' "$TMP/ithon-fixture.err"
+    show_diagnostics "$TMP/ithon-fixture" "$TMP/ithon-fixture.err"
+  fi
+
+  if test -s "$TMP/ithon-receipt.jsonl"; then
+    pass 'ithon/check-receipt'
+  else
+    fail 'ithon/check-receipt'
   fi
 }
 
@@ -88,10 +103,11 @@ check_fieldmouse() {
       pass 'fieldmouse/url'
     else
       fail 'fieldmouse/url output'
+      show_diagnostics "$TMP/fieldmouse-url"
     fi
   else
     fail 'fieldmouse/url'
-    sed 's/^/  /' "$TMP/fieldmouse-url.err"
+    show_diagnostics "$TMP/fieldmouse-url" "$TMP/fieldmouse-url.err"
   fi
 }
 
@@ -108,7 +124,7 @@ check_idric() {
     pass 'idric/check'
   else
     fail 'idric/check'
-    sed 's/^/  /' "$TMP/idric.err"
+    show_diagnostics "$TMP/idric" "$TMP/idric.err"
   fi
 }
 
