@@ -34,15 +34,15 @@ def icu_get(url ∈ str) → int:
 def main() → int:
     arguments ∈ list[str] ← sys.argv
 
-    if len(arguments) = 5 and arguments[1] = "url":
+    if len(arguments) == 5 and arguments[1] == "url":
         sys.stdout.write(query_url(arguments[2], "exact", arguments[3], arguments[4]) + "\n")
         return 0
-    if len(arguments) = 5 and arguments[1] = "domain":
+    if len(arguments) == 5 and arguments[1] == "domain":
         sys.stdout.write(query_url(arguments[2], "domain", arguments[3], arguments[4]) + "\n")
         return 0
-    if len(arguments) = 5 and arguments[1] = "search":
+    if len(arguments) == 5 and arguments[1] == "search":
         return icu_get(query_url(arguments[2], "exact", arguments[3], arguments[4]))
-    if len(arguments) = 4 and arguments[1] = "replay":
+    if len(arguments) == 4 and arguments[1] == "replay":
         sys.stdout.write("https://web.archive.org/web/" + arguments[2] + "id_/" + arguments[3] + "\n")
         return 0
 
