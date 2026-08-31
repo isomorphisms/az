@@ -1,0 +1,4 @@
+# Careerjet API endpoint inventory
+# Verified 2026-08-31 against https://www.careerjet.com/partners/api
+
+GET https://search.api.careerjet.net/v4/query
