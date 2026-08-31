@@ -27,7 +27,9 @@ https://oauth.reddit.com/search?raw_json=1&limit=25&sort=relevance&t=all&q=...
 ```
 
 This is the smallest useful checkpoint: arguments, strings, and percent
-encoding.
+encoding. For the common fixture query `industrial maintenance`, the expected
+encoding is `industrial%20maintenance` so every language lane has the same
+byte-level target.
 
 ### `fixture`
 
@@ -135,6 +137,38 @@ result record are written down now so later compiler/library work has a stable
 target.
 
 Unresolved holes are intentional failure, not a hidden fallback.
+
+## Manual receipts
+
+`check` is a Grease/YSH-style manual runner. It is intentionally not wired into
+the root `make test` yet because Fieldmouse and Idriç have known unfinished
+boundaries.
+
+Run it as:
+
+```text
+ysh check
+```
+
+or point it at explicit compiler/runtime builds:
+
+```text
+ITHON=/opt/ithon/ithon \
+FIELDMOUSE=/opt/fieldmouse/build/exec/fieldmouse \
+IDRIC=/opt/Idric/build/exec/idris2 \
+ysh check
+```
+
+It emits only the three ordinary receipt states:
+
+```text
+PASS    checkpoint
+FAIL    checkpoint
+SKIP    checkpoint
+```
+
+For Ithon it also requests an `ITHON_CHECK_RECEIPT`, so a successful language
+check has the source/lowered-source hash receipt supplied by Ithon itself.
 
 ## Checkpoint ladder
 
