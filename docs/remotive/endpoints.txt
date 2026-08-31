@@ -1,0 +1,6 @@
+# Remotive API endpoint inventory
+# Verified 2026-08-31 against https://remotive.com/remote-jobs/api
+# and Remotive's linked official API documentation.
+
+GET https://remotive.com/api/remote-jobs
+GET https://remotive.com/api/remote-jobs/categories
