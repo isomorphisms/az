@@ -1,0 +1,13 @@
+GET https://api.nytimes.com/svc/search/v2/articlesearch.json
+GET https://api.nytimes.com/svc/archive/v1/{year}/{month}.json
+GET https://api.nytimes.com/svc/topstories/v2/{section}.json
+GET https://api.nytimes.com/svc/news/v3/content/{source}/{section}.json
+GET https://api.nytimes.com/svc/news/v3/content/{source}/{section}/{time-period}.json
+GET https://api.nytimes.com/svc/news/v3/content.json?url={item-url}
+GET https://api.nytimes.com/svc/mostpopular/v2/viewed/{period}.json
+GET https://api.nytimes.com/svc/mostpopular/v2/shared/{period}.json
+GET https://api.nytimes.com/svc/mostpopular/v2/emailed/{period}.json
+GET https://api.nytimes.com/svc/books/v3/lists.json
+GET https://api.nytimes.com/svc/books/v3/lists/names.json
+GET https://api.nytimes.com/svc/books/v3/lists/{date}/{list}.json
+GET https://api.nytimes.com/svc/books/v3/reviews.json
