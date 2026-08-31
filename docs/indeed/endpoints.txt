@@ -1,0 +1,71 @@
+# Indeed API endpoint inventory
+# Verified 2026-08-31 against https://docs.indeed.com/api-guides/
+# and the current Indeed Partner Docs.
+#
+# IMPORTANT: Indeed's main partner APIs are GraphQL. Many named API operations
+# share one HTTP endpoint; the GraphQL operations are therefore listed below
+# separately so the single transport URL does not hide the API surface.
+
+# OAuth / OpenID Connect
+GET  https://secure.indeed.com/oauth/v2/authorize
+POST https://apis.indeed.com/oauth/v2/tokens
+GET  https://secure.indeed.com/v2/api/appinfo
+GET  https://secure.indeed.com/v2/api/userinfo
+GET  https://secure.indeed.com/.well-known/keys
+
+# Main GraphQL transport
+POST https://apis.indeed.com/graphql
+
+# Real-time API (server-sent events)
+GET  https://apis.indeed.com/sse/notifications/message-update
+
+# SCIM 2.0 Users API
+GET    https://api.indeed.com/scim/v2/Users
+POST   https://api.indeed.com/scim/v2/Users
+GET    https://api.indeed.com/scim/v2/Users/{id}
+PUT    https://api.indeed.com/scim/v2/Users/{id}
+DELETE https://api.indeed.com/scim/v2/Users/{id}
+
+# GraphQL operations: Job Sync / Job Update
+GRAPHQL QUERY    node @ POST https://apis.indeed.com/graphql
+GRAPHQL QUERY    nodes @ POST https://apis.indeed.com/graphql
+GRAPHQL QUERY    findEmployerJobsPartner @ POST https://apis.indeed.com/graphql
+GRAPHQL MUTATION jobsIngest.createSourcedJobPostings @ POST https://apis.indeed.com/graphql
+GRAPHQL MUTATION jobsIngest.expireSourcedJobsBySourcedPostingId @ POST https://apis.indeed.com/graphql
+GRAPHQL MUTATION jobsIngest.updateSourcedJobPostings @ POST https://apis.indeed.com/graphql
+GRAPHQL MUTATION jobsIngest.clearSourcedJobPostingUpdates @ POST https://apis.indeed.com/graphql
+GRAPHQL MUTATION jobsIngest.addSeats @ POST https://apis.indeed.com/graphql
+GRAPHQL MUTATION jobsIngest.updateSeats @ POST https://apis.indeed.com/graphql
+GRAPHQL MUTATION jobsIngest.clearSeats @ POST https://apis.indeed.com/graphql
+
+# GraphQL operation: generic job retrieval example in current auth docs
+# Access is permissioned; Indeed's own example shows a client denied access to
+# the job-retrieval-service when the service is not provisioned.
+GRAPHQL QUERY    jobSearch @ POST https://apis.indeed.com/graphql
+
+# GraphQL operations: Disposition Sync
+GRAPHQL MUTATION partnerDisposition.send @ POST https://apis.indeed.com/graphql
+
+# GraphQL operations: Candidate Sync / Employer Registration
+GRAPHQL MUTATION registerEmployer @ POST https://apis.indeed.com/graphql
+GRAPHQL MUTATION manageFeaturesForEmployer @ POST https://apis.indeed.com/graphql
+GRAPHQL QUERY    findRegisteredEmployers @ POST https://apis.indeed.com/graphql
+GRAPHQL MUTATION deregisterEmployer @ POST https://apis.indeed.com/graphql
+GRAPHQL MUTATION application.initialize @ POST https://apis.indeed.com/graphql
+GRAPHQL MUTATION application.submit @ POST https://apis.indeed.com/graphql
+GRAPHQL QUERY    findStatuses @ POST https://apis.indeed.com/graphql
+GRAPHQL MUTATION application.delete @ POST https://apis.indeed.com/graphql
+GRAPHQL MUTATION fetchAssets @ POST https://apis.indeed.com/graphql
+GRAPHQL QUERY    assetsByTimeRange @ POST https://apis.indeed.com/graphql
+GRAPHQL MUTATION stageAssets @ POST https://apis.indeed.com/graphql
+
+# GraphQL operation: Hiring Lab
+GRAPHQL QUERY    findHiringLabPostingsPublic @ POST https://apis.indeed.com/graphql
+
+# GraphQL operation: Employer Data / Indeed PLUS example
+GRAPHQL MUTATION patchEmployer @ POST https://apis.indeed.com/graphql
+
+# Other currently documented Indeed integration families share the GraphQL
+# transport or are feed/webhook protocols rather than additional fixed request
+# endpoints. These include Sponsored Jobs API, Indeed Apply, Job Sync XML, and
+# job lifecycle/application webhooks. See the Markdown notes in this directory.
