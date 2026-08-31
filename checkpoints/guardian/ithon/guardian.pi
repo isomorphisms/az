@@ -1,0 +1,64 @@
+#!/usr/bin/env ithon
+
+import os
+import subprocess
+import sys
+import urllib.parse
+
+
+ICU ∈ str ← os.environ.get("ICU", "icu")
+USAGE ∈ str ← "usage: guardian {url QUERY | search QUERY | tags QUERY | sections QUERY | editions QUERY | item ID}"
+
+
+def encode(text ∈ str) → str:
+    return urllib.parse.quote(text, "")
+
+
+def key() → str:
+    value ∈ str ← os.environ.get("GUARDIAN_API_KEY", "")
+    if value = "":
+        raise RuntimeError("guardian: missing GUARDIAN_API_KEY")
+    return value
+
+
+def icu_get(url ∈ str) → int:
+    return subprocess.call([ICU, "get", url])
+
+
+def keyed(url ∈ str, api_key ∈ str) → str:
+    return url + "&api-key=" + encode(api_key)
+
+
+def search_url(query ∈ str, api_key ∈ str) → str:
+    return keyed("https://content.guardianapis.com/search?q=" + encode(query) + "&order-by=oldest", api_key)
+
+
+def main() → int:
+    arguments ∈ list[str] ← sys.argv
+    if len(arguments) ≠ 3:
+        sys.stderr.write(USAGE + "\n")
+        return 2
+
+    command ∈ str ← arguments[1]
+    operand ∈ str ← arguments[2]
+    api_key ∈ str ← key()
+
+    if command = "url":
+        sys.stdout.write(search_url(operand, api_key) + "\n")
+        return 0
+    if command = "search":
+        return icu_get(search_url(operand, api_key))
+    if command = "tags":
+        return icu_get(keyed("https://content.guardianapis.com/tags?q=" + encode(operand), api_key))
+    if command = "sections":
+        return icu_get(keyed("https://content.guardianapis.com/sections?q=" + encode(operand), api_key))
+    if command = "editions":
+        return icu_get(keyed("https://content.guardianapis.com/editions?q=" + encode(operand), api_key))
+    if command = "item":
+        return icu_get(keyed("https://content.guardianapis.com/" + operand + "?show-fields=all", api_key))
+
+    sys.stderr.write(USAGE + "\n")
+    return 2
+
+
+raise SystemExit(main())
