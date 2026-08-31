@@ -1,0 +1,53 @@
+#!/usr/bin/env ithon
+
+import os
+import subprocess
+import sys
+import urllib.parse
+
+
+ICU ∈ str ← os.environ.get("ICU", "icu")
+CDX ∈ str ← "https://web.archive.org/cdx/search/cdx"
+USAGE ∈ str ← "usage: wayback {url URL FROM TO | domain DOMAIN FROM TO | search URL FROM TO | replay TIMESTAMP URL}"
+
+
+def encode(text ∈ str) → str:
+    return urllib.parse.quote(text, "")
+
+
+def query_url(target ∈ str, match_type ∈ str, from_date ∈ str, to_date ∈ str) → str:
+    return (
+        CDX +
+        "?url=" + encode(target) +
+        "&matchType=" + match_type +
+        "&from=" + encode(from_date) +
+        "&to=" + encode(to_date) +
+        "&output=json&fl=timestamp,original,statuscode,mimetype,digest" +
+        "&filter=statuscode:200&filter=mimetype:text/html&collapse=digest&gzip=false"
+    )
+
+
+def icu_get(url ∈ str) → int:
+    return subprocess.call([ICU, "get", url])
+
+
+def main() → int:
+    arguments ∈ list[str] ← sys.argv
+
+    if len(arguments) = 5 and arguments[1] = "url":
+        sys.stdout.write(query_url(arguments[2], "exact", arguments[3], arguments[4]) + "\n")
+        return 0
+    if len(arguments) = 5 and arguments[1] = "domain":
+        sys.stdout.write(query_url(arguments[2], "domain", arguments[3], arguments[4]) + "\n")
+        return 0
+    if len(arguments) = 5 and arguments[1] = "search":
+        return icu_get(query_url(arguments[2], "exact", arguments[3], arguments[4]))
+    if len(arguments) = 4 and arguments[1] = "replay":
+        sys.stdout.write("https://web.archive.org/web/" + arguments[2] + "id_/" + arguments[3] + "\n")
+        return 0
+
+    sys.stderr.write(USAGE + "\n")
+    return 2
+
+
+raise SystemExit(main())
