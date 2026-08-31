@@ -1,0 +1,8 @@
+# Jobicy API endpoint inventory
+# Verified 2026-08-31 against https://jobicy.com/jobs-rss-feed
+
+GET https://jobicy.com/api/v2/remote-jobs
+
+# Other documented machine-readable interfaces (not REST endpoints):
+MCP https://jobicy.com/mcp
+RSS https://jobicy.com/jobs/feed
