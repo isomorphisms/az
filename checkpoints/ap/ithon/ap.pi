@@ -19,7 +19,7 @@ def search_url(query ∈ str) → str:
 
 def live_search(query ∈ str) → int:
     api_key ∈ str ← os.environ.get("AP_API_KEY", "")
-    if api_key = "":
+    if api_key == "":
         raise RuntimeError("ap: missing AP_API_KEY")
 
     # AP requires x-api-key. Use the absence of ICU custom request headers as
@@ -31,37 +31,37 @@ def live_search(query ∈ str) → int:
 def main() → int:
     arguments ∈ list[str] ← sys.argv
 
-    if len(arguments) = 3 and arguments[1] = "search-url":
+    if len(arguments) == 3 and arguments[1] == "search-url":
         sys.stdout.write(search_url(arguments[2]) + "\n")
         return 0
-    if len(arguments) = 3 and arguments[1] = "item":
+    if len(arguments) == 3 and arguments[1] == "item":
         sys.stdout.write(BASE + "/content/" + arguments[2] + "\n")
         return 0
-    if len(arguments) = 2 and arguments[1] = "feed":
+    if len(arguments) == 2 and arguments[1] == "feed":
         sys.stdout.write(BASE + "/content/feed\n")
         return 0
-    if len(arguments) = 2 and arguments[1] = "rss":
+    if len(arguments) == 2 and arguments[1] == "rss":
         sys.stdout.write(BASE + "/content/rss\n")
         return 0
-    if len(arguments) = 3 and arguments[1] = "rss-id":
+    if len(arguments) == 3 and arguments[1] == "rss-id":
         sys.stdout.write(BASE + "/content/rss/" + arguments[2] + "\n")
         return 0
-    if len(arguments) = 2 and arguments[1] = "ondemand":
+    if len(arguments) == 2 and arguments[1] == "ondemand":
         sys.stdout.write(BASE + "/content/ondemand\n")
         return 0
-    if len(arguments) = 2 and arguments[1] = "live-choice":
+    if len(arguments) == 2 and arguments[1] == "live-choice":
         sys.stdout.write(BASE + "/content/live-choice-events\n")
         return 0
-    if len(arguments) = 2 and arguments[1] = "account":
+    if len(arguments) == 2 and arguments[1] == "account":
         sys.stdout.write(BASE + "/account\n")
         return 0
-    if len(arguments) = 2 and arguments[1] = "followed-topics":
+    if len(arguments) == 2 and arguments[1] == "followed-topics":
         sys.stdout.write(BASE + "/account/followedtopics\n")
         return 0
-    if len(arguments) = 2 and arguments[1] = "plans":
+    if len(arguments) == 2 and arguments[1] == "plans":
         sys.stdout.write(BASE + "/account/plans\n")
         return 0
-    if len(arguments) = 3 and arguments[1] = "live-search":
+    if len(arguments) == 3 and arguments[1] == "live-search":
         return live_search(arguments[2])
 
     sys.stderr.write(USAGE + "\n")
