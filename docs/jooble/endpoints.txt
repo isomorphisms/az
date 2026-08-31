@@ -1,0 +1,8 @@
+# Jooble REST API endpoint inventory
+# Verified 2026-08-31 against current Jooble Help Center documentation.
+
+POST https://jooble.org/api/{api_Key}
+
+# The hostname changes by regional Jooble domain and each region requires its own key.
+# Example UK route:
+POST https://uk.jooble.org/api/{api_Key}
