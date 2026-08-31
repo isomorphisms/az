@@ -1,0 +1,18 @@
+# LinkedIn Talent Job Posting API endpoint inventory
+# Verified 2026-08-31 against Microsoft Learn / LinkedIn Talent documentation.
+# Scope: Job Posting API and its customer provisioning/authentication support,
+# not the entire LinkedIn platform API.
+
+# OAuth client-credentials token
+POST https://www.linkedin.com/oauth/v2/accessToken
+
+# Job posting lifecycle (CREATE/UPDATE/RENEW/CLOSE/etc selected in request body)
+POST https://api.linkedin.com/rest/simpleJobPostings
+POST https://api.linkedin.com/v2/simpleJobPostings
+GET  https://api.linkedin.com/rest/simpleJobPostings
+GET  https://api.linkedin.com/v2/simpleJobPostings
+
+# Partner customer/child-application provisioning
+POST https://api.linkedin.com/v2/provisionedApplications
+POST https://api.linkedin.com/v2/provisionedApplications/{developerApplicationURN}
+GET  https://api.linkedin.com/v2/provisionedApplications?q=credentialsByUniqueForeignId&uniqueForeignId={uniqueForeignId}
