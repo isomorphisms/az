@@ -28,7 +28,7 @@ def search_body(query ∈ str) → str:
 
 def live_search(query ∈ str) → int:
     api_key ∈ str ← os.environ.get("FT_API_KEY", "")
-    if api_key = "":
+    if api_key == "":
         raise RuntimeError("ft: missing FT_API_KEY")
 
     # FT needs X-Api-Key plus Content-Type on the POST. Do not route around the
@@ -40,16 +40,16 @@ def live_search(query ∈ str) → int:
 def main() → int:
     arguments ∈ list[str] ← sys.argv
 
-    if len(arguments) = 3 and arguments[1] = "search-body":
+    if len(arguments) == 3 and arguments[1] == "search-body":
         sys.stdout.write(search_body(arguments[2]) + "\n")
         return 0
-    if len(arguments) = 3 and arguments[1] = "content":
+    if len(arguments) == 3 and arguments[1] == "content":
         sys.stdout.write("https://api.ft.com/content/" + arguments[2] + "\n")
         return 0
-    if len(arguments) = 3 and arguments[1] = "notifications":
+    if len(arguments) == 3 and arguments[1] == "notifications":
         sys.stdout.write("https://api.ft.com/content/notifications?since=" + encode(arguments[2]) + "\n")
         return 0
-    if len(arguments) = 3 and arguments[1] = "live-search":
+    if len(arguments) == 3 and arguments[1] == "live-search":
         return live_search(arguments[2])
 
     sys.stderr.write(USAGE + "\n")
