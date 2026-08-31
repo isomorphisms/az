@@ -1,0 +1,28 @@
+// Fieldmouse Financial Times checkpoint.
+// JSON/request-header gaps stay visible; no Node fetch fallback.
+
+var command ← arguments(1);
+var operand ← arguments(2);
+
+if (command = "content") {
+  console.log("https://api.ft.com/content/" + operand);
+} else {
+  if (command = "notifications") {
+    console.log("https://api.ft.com/content/notifications?since=" + percentEncode(operand));
+  } else {
+    if (command = "search-body") {
+      var escaped ← jsonEscape(operand);
+      console.log("{\"queryString\":\"" + escaped + "\",\"resultContext\":{\"aspects\":[\"title\",\"lifecycle\",\"location\",\"summary\",\"editorial\"],\"sortOrder\":\"ASC\",\"sortField\":\"initialPublishDateTime\"}}");
+    } else {
+      if (command = "live-search") {
+        var key ← environment("FT_API_KEY");
+        // Reading the key is itself a process/environment checkpoint. Never
+        // print it. FT then requires X-Api-Key and Content-Type request headers,
+        // which current ICU cannot yet represent.
+        console.log("SKIP\tft live-search: ICU custom request headers");
+      } else {
+        console.log("usage: ft {search-body QUERY | content UUID | notifications SINCE | live-search QUERY}");
+      }
+    }
+  }
+}
