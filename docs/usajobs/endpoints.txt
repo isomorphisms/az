@@ -1,0 +1,48 @@
+# USAJOBS API endpoint inventory
+# Verified 2026-08-31 against https://developer.usajobs.gov/api-reference/
+# Base host: https://data.usajobs.gov
+
+# Job APIs
+GET https://data.usajobs.gov/api/Search
+GET https://data.usajobs.gov/api/historicjoa
+GET https://data.usajobs.gov/api/historicjoa/announcementtext
+
+# Code-list APIs
+GET https://data.usajobs.gov/api/codelist/agencysubelements
+GET https://data.usajobs.gov/api/codelist/occupationalseries
+GET https://data.usajobs.gov/api/codelist/payplans
+GET https://data.usajobs.gov/api/codelist/postalcodes
+GET https://data.usajobs.gov/api/codelist/geoloccodes
+GET https://data.usajobs.gov/api/codelist/gsageoloccodes
+GET https://data.usajobs.gov/api/codelist/countries
+GET https://data.usajobs.gov/api/codelist/countrysubdivisions
+GET https://data.usajobs.gov/api/codelist/travelpercentages
+GET https://data.usajobs.gov/api/codelist/positionscheduletypes
+GET https://data.usajobs.gov/api/codelist/positionofferingtypes
+GET https://data.usajobs.gov/api/codelist/whomayapply
+GET https://data.usajobs.gov/api/codelist/hiringpaths
+GET https://data.usajobs.gov/api/codelist/academichonors
+GET https://data.usajobs.gov/api/codelist/actioncodes
+GET https://data.usajobs.gov/api/codelist/degreetypecodes
+GET https://data.usajobs.gov/api/codelist/documentformats
+GET https://data.usajobs.gov/api/codelist/racecodes
+GET https://data.usajobs.gov/api/codelist/ethnicities
+GET https://data.usajobs.gov/api/codelist/documentations
+GET https://data.usajobs.gov/api/codelist/federalemploymentstatuses
+GET https://data.usajobs.gov/api/codelist/languageproficiencies
+GET https://data.usajobs.gov/api/codelist/languagecodes
+GET https://data.usajobs.gov/api/codelist/militarystatuscodes
+GET https://data.usajobs.gov/api/codelist/refereetypecodes
+GET https://data.usajobs.gov/api/codelist/specialhirings
+GET https://data.usajobs.gov/api/codelist/remunerationrateintervalcodes
+GET https://data.usajobs.gov/api/codelist/applicationstatuses
+GET https://data.usajobs.gov/api/codelist/academiclevels
+GET https://data.usajobs.gov/api/codelist/securityclearances
+GET https://data.usajobs.gov/api/codelist/keystandardrequirements
+GET https://data.usajobs.gov/api/codelist/requiredstandarddocuments
+GET https://data.usajobs.gov/api/codelist/disabilities
+GET https://data.usajobs.gov/api/codelist/applicantsuppliers
+GET https://data.usajobs.gov/api/codelist/missioncriticalcodes
+GET https://data.usajobs.gov/api/codelist/announcementclosingtypes
+GET https://data.usajobs.gov/api/codelist/servicetypes
+GET https://data.usajobs.gov/api/codelist/locationexpansions
