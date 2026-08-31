@@ -1,0 +1,6 @@
+POST https://api.economist.com/eco/content/all/b2b-content-api/v1/auth/login
+GET https://api.economist.com/eco/content/all/b2b-content-api/v1/articles
+GET https://api.economist.com/eco/content/all/b2b-content-api/v1/articles/{id}
+GET https://api.economist.com/eco/content/all/b2b-content-api/v1/sections
+GET https://api.economist.com/eco/content/all/b2b-content-api/v1/tags
+GET https://api.economist.com/eco/content/all/b2b-content-api/v1/the-world-in-brief
