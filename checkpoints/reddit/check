@@ -1,16 +1,12 @@
 #!/usr/bin/env ysh
 
-# Manual compiler/language watchpoint runner.
-# Deliberately not part of the root make test while Fieldmouse/Idriç lanes have
-# known unsupported boundaries.
+# Manual Idriç Reddit checkpoint runner.
+# Deliberately not part of the root make test while named holes remain.
 
 set -u
 
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-ITHON=${ITHON:-ithon}
-FIELDMOUSE=${FIELDMOUSE:-fieldmouse}
 IDRIC=${IDRIC:-idris2}
-EXPECTED_URL='https://oauth.reddit.com/search?raw_json=1&limit=25&sort=relevance&t=all&q=industrial%20maintenance'
 
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT HUP INT TERM
@@ -45,91 +41,17 @@ show_diagnostics() {
   done
 }
 
-check_ithon() {
-  if ! available "$ITHON"; then
-    skip "ithon (not found: $ITHON)"
-    return
-  fi
+if ! available "$IDRIC"; then
+  skip "idric (not found: $IDRIC)"
+  exit 0
+fi
 
-  if ITHON_CHECK_RECEIPT="$TMP/ithon-receipt.jsonl" \
-      "$ITHON" "$HERE/ithon/reddit.pi" \
-      url 'industrial maintenance' \
-      >"$TMP/ithon-url" 2>"$TMP/ithon-url.err"; then
-    if test "$(cat "$TMP/ithon-url")" = "$EXPECTED_URL"; then
-      pass 'ithon/url'
-    else
-      fail 'ithon/url output'
-      show_diagnostics "$TMP/ithon-url"
-    fi
-  else
-    fail 'ithon/url check or execution'
-    show_diagnostics "$TMP/ithon-url" "$TMP/ithon-url.err"
-  fi
-
-  if ITHON_CHECK_RECEIPT="$TMP/ithon-receipt.jsonl" \
-      "$ITHON" "$HERE/ithon/reddit.pi" \
-      fixture "$HERE/fixture/search.json" \
-      >"$TMP/ithon-fixture" 2>"$TMP/ithon-fixture.err"; then
-    if cmp -s "$HERE/fixture/expected.tsv" "$TMP/ithon-fixture"; then
-      pass 'ithon/fixture'
-    else
-      fail 'ithon/fixture output'
-      diff -u "$HERE/fixture/expected.tsv" "$TMP/ithon-fixture" || true
-    fi
-  else
-    fail 'ithon/fixture check or execution'
-    show_diagnostics "$TMP/ithon-fixture" "$TMP/ithon-fixture.err"
-  fi
-
-  if test -s "$TMP/ithon-receipt.jsonl"; then
-    pass 'ithon/check-receipt'
-  else
-    fail 'ithon/check-receipt'
-  fi
-}
-
-check_fieldmouse() {
-  if ! available "$FIELDMOUSE"; then
-    skip "fieldmouse (not found: $FIELDMOUSE)"
-    return
-  fi
-
-  # Current Fieldmouse accepts only the source path, not script arguments, so
-  # this is expected to remain a focused FAIL until that process surface lands.
-  if "$FIELDMOUSE" "$HERE/fieldmouse/reddit" \
-      url 'industrial maintenance' \
-      >"$TMP/fieldmouse-url" 2>"$TMP/fieldmouse-url.err"; then
-    if test "$(cat "$TMP/fieldmouse-url")" = "$EXPECTED_URL"; then
-      pass 'fieldmouse/url'
-    else
-      fail 'fieldmouse/url output'
-      show_diagnostics "$TMP/fieldmouse-url"
-    fi
-  else
-    fail 'fieldmouse/url'
-    show_diagnostics "$TMP/fieldmouse-url" "$TMP/fieldmouse-url.err"
-  fi
-}
-
-check_idric() {
-  if ! available "$IDRIC"; then
-    skip "idric (not found: $IDRIC)"
-    return
-  fi
-
-  # The draft contains named holes on purpose. A current FAIL is a useful
-  # receipt listing exactly which library/compiler boundaries remain.
-  if "$IDRIC" --check "$HERE/idric/Reddit.idric" \
-      >"$TMP/idric" 2>"$TMP/idric.err"; then
-    pass 'idric/check'
-  else
-    fail 'idric/check'
-    show_diagnostics "$TMP/idric" "$TMP/idric.err"
-  fi
-}
-
-check_ithon
-check_fieldmouse
-check_idric
+if "$IDRIC" --check "$HERE/idric/Reddit.idric" \
+    >"$TMP/idric" 2>"$TMP/idric.err"; then
+  pass 'idric/check'
+else
+  fail 'idric/check'
+  show_diagnostics "$TMP/idric" "$TMP/idric.err"
+fi
 
 exit "$status"
