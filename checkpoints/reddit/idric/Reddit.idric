@@ -50,9 +50,11 @@ decode_listing body = ?decode_reddit_listing
 environment_value : String → IO (Maybe String)
 environment_value name = ?read_environment_value
 
--- ICU is the intended small Idriç HTTP transport. Reddit requires both
--- Authorization and User-Agent request headers; current ICU's command/request
--- model does not expose caller-supplied headers yet. Keep that gap explicit.
+-- ICU now consumes Idric-Net for its typed URL/request/transport boundary.
+-- Reddit still needs caller-supplied Authorization and User-Agent headers.
+-- Idric-Net has typed HTTP header values, but the current public render/send
+-- path still owns a fixed header set. Keep only this narrow seam as a hole;
+-- do not introduce another HTTP client here.
 authenticated_icu_get : String → String → String → IO (Either String String)
 authenticated_icu_get token user_agent url = ?icu_get_with_request_headers
 
