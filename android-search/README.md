@@ -72,3 +72,20 @@ launches `.SearchActivity` with `am start -W`, and requires both `Status: ok`
 and a live package process. This is an install/launch check only; it is not a
 claim that a real Creators API search was performed or that result rendering was
 visually accepted on the device.
+
+## Phone test artifact
+
+The `android-search-test-apk` workflow builds an exact-head signed test APK and
+retains one `az-search-phone-test-bundle` artifact containing:
+
+- `az-search-debug.apk` and its SHA-256;
+- the exact source commit identity;
+- `bin/az`;
+- `config/amazon-public`;
+- `android-search/show-results.ysh`;
+- short phone-test instructions.
+
+This bundle exists to make physical-phone testing independent of the current
+Cat Food phone manifest. It is not a Cat Food delivery receipt: Cat Food still
+requires its own accepted package mechanism before `az` may stop being an
+Android phone delivery gap.
