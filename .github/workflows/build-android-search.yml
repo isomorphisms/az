@@ -1,0 +1,71 @@
+name: Build AZ Search APK
+
+on:
+  push:
+    branches:
+      - material3-search-ui
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: [self-hosted, linux, debian]
+    steps:
+      - name: Check out exact source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Install Android SDK platform and build tools
+        shell: sh
+        run: |
+          set -eu
+          sdk="$RUNNER_TEMP/android-sdk"
+          tools_zip="$RUNNER_TEMP/commandlinetools.zip"
+          mkdir -p "$sdk/cmdline-tools"
+          curl --fail --location --silent --show-error \
+            https://dl.google.com/android/repository/commandlinetools-linux-15859902_latest.zip \
+            -o "$tools_zip"
+          printf '%s  %s\n' \
+            4e4c464f145a7512b57d088ac6c278c03c9eea610886b35a5e0804e74eedf583 \
+            "$tools_zip" | sha256sum -c -
+          unzip -q "$tools_zip" -d "$sdk/cmdline-tools"
+          mv "$sdk/cmdline-tools/cmdline-tools" "$sdk/cmdline-tools/latest"
+          manager="$sdk/cmdline-tools/latest/bin/sdkmanager"
+          "$manager" --sdk_root="$sdk" --licenses <<'EOF'
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          EOF
+          "$manager" --sdk_root="$sdk" \
+            'platforms;android-36' \
+            'build-tools;36.0.0'
+          printf 'ANDROID_HOME=%s\n' "$sdk" >> "$GITHUB_ENV"
+
+      - name: Build and verify APK
+        shell: sh
+        run: |
+          set -eu
+          sh android-search/build-apk.sh
+          test -s android-search/build/az-search-debug.apk
+          sha256sum android-search/build/az-search-debug.apk \
+            | tee android-search/build/az-search-debug.apk.sha256
+
+      - name: Upload APK
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: az-search-debug-apk
+          path: |
+            android-search/build/az-search-debug.apk
+            android-search/build/az-search-debug.apk.sha256
+          if-no-files-found: error
+          retention-days: 14
