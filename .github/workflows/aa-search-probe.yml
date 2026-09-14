@@ -1,0 +1,60 @@
+name: AA search probe
+
+on:
+  push:
+    branches:
+      - AA
+    paths:
+      - .github/workflows/aa-search-probe.yml
+
+permissions:
+  contents: read
+
+jobs:
+  loring-tu:
+    runs-on: [self-hosted, linux, debian]
+    steps:
+      - name: Fetch Anna's Archive search through ICU
+        shell: bash
+        run: |
+          set -eu
+          command -v icu
+          output="$RUNNER_TEMP/aa-loring-tu.html"
+          icu get 'https://annas-archive.gl/search?q=Loring%20Tu' > "$output"
+          test -s "$output"
+
+          bytes=$(wc -c < "$output")
+          loring_count=$(tr '<' '\n' < "$output" | awk '
+            BEGIN { count = 0 }
+            {
+              line = tolower($0)
+              while (match(line, /loring tu/)) {
+                count++
+                line = substr(line, RSTART + RLENGTH)
+              }
+            }
+            END { print count }
+          ')
+          result_card_count=$(tr '<' '\n' < "$output" | awk '
+            BEGIN { count = 0 }
+            /js-vim-focus/ { count++ }
+            END { print count }
+          ')
+
+          printf 'bytes=%s\n' "$bytes"
+          printf 'loring_tu_occurrences=%s\n' "$loring_count"
+          printf 'js_vim_focus_cards=%s\n' "$result_card_count"
+
+          tr '<' '\n' < "$output" | awk '
+            BEGIN { shown = 0 }
+            tolower($0) ~ /loring tu/ {
+              text = $0
+              gsub(/[[:space:]]+/, " ", text)
+              if (length(text) > 300) text = substr(text, 1, 300) "..."
+              print "match=" text
+              shown++
+              if (shown == 8) exit
+            }
+          '
+
+          test "$loring_count" -gt 0
