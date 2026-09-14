@@ -29,13 +29,15 @@ arbitrary host. The currently accepted mirrors are `.gl`, `.pk`, and `.gd`.
 
 The repository has a GitHub Environment named `AA`, with an Environment secret
 also named `AA`. `.github/workflows/aa-live.yml` selects that environment and
-maps `${{ secrets.AA }}` to the process environment variable `AA` for the
-resolver.
+maps `${{ secrets.AA }}` to the process environment variable `AA` only for the
+resolver step.
 
 The live workflow is manual because it uses a real membership credential and a
-real upstream service. It requires a self-hosted Debian runner with `ysh`, ICU,
-`jq`, `grep`, and `tr` available. It writes the resolved URL to runner temporary
-storage and checks its shape without printing it to the Actions log.
+real upstream service. It runs on GitHub-hosted Ubuntu 24.04, builds the pinned
+Idric, Idric-Net, and ICU revisions used by the earlier hosted AA probe, then
+runs the resolver through that compiled ICU binary. The hosted image does not
+need a self-hosted Debian runner. The resolved URL is written to runner temporary
+storage and its shape is checked without printing the URL to the Actions log.
 
 The upstream API requires the key in the request URL. Consequently the ICU
 process argument list briefly contains the key while the request runs. The
