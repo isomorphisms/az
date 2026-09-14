@@ -6,6 +6,7 @@ on:
     branches:
       - grease-amazon-prices
       - abebooks-impact-links
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -21,3 +22,19 @@ jobs:
         run: bash -n bin/az bin/abe test/az-test.sh test/abe-test.sh
       - name: Smoke tests
         run: make test
+
+  associate-id:
+    if: github.event_name == 'workflow_dispatch'
+    environment: AZ
+    runs-on: ubuntu-latest
+    env:
+      AZ_PARTNER_TAG: ${{ secrets.ASSOCIATE_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Associates tag wiring
+        shell: bash
+        run: |
+          set -eu
+          test -n "$AZ_PARTNER_TAG"
+          url=$(bash bin/az link B012345678)
+          test "$url" = "https://www.amazon.com/dp/B012345678?tag=$AZ_PARTNER_TAG"
