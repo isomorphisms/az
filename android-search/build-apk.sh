@@ -32,10 +32,10 @@ work_dir=$(mktemp -d "${TMPDIR:-/tmp}/az-search-build.XXXXXX")
 trap 'rm -rf "$work_dir"' EXIT HUP INT TERM
 classes_dir="$work_dir/classes"
 dex_dir="$work_dir/dex"
+compiled_resources="$work_dir/resources"
 output_dir="$project_dir/build"
-mkdir -p "$classes_dir" "$dex_dir" "$output_dir"
+mkdir -p "$classes_dir" "$dex_dir" "$compiled_resources" "$output_dir"
 
-compiled_resources="$work_dir/resources.zip"
 base_apk="$work_dir/base.apk"
 unsigned_apk="$work_dir/unsigned.apk"
 aligned_apk="$work_dir/aligned.apk"
@@ -54,7 +54,7 @@ final_apk="$output_dir/az-search-debug.apk"
     --version-code 1 \
     --version-name 0.1.0 \
     -o "$base_apk" \
-    "$compiled_resources"
+    "$compiled_resources"/*.flat
 
 javac \
     -source 8 \
@@ -108,4 +108,9 @@ fi
 
 "$build_tools/apksigner" verify --verbose "$final_apk"
 "$build_tools/zipalign" -c -P 16 4 "$final_apk"
+permissions=$("$build_tools/aapt2" dump permissions "$final_apk")
+if printf '%s\n' "$permissions" | grep -F 'android.permission.INTERNET' >/dev/null; then
+    echo 'built APK unexpectedly requests android.permission.INTERNET' >&2
+    exit 1
+fi
 printf '%s\n' "$final_apk"
