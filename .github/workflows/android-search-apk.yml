@@ -20,7 +20,14 @@ jobs:
         shell: sh
         run: |
           set -eu
-          sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+          sdk_root=${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}
+          test -n "$sdk_root"
+          sdkmanager="$sdk_root/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$sdkmanager" ]; then
+            sdkmanager=$(find "$sdk_root/cmdline-tools" -type f -name sdkmanager -perm -111 | sort | tail -n 1)
+          fi
+          test -x "$sdkmanager"
+          yes | "$sdkmanager" 'platforms;android-36' 'build-tools;36.0.0' >/dev/null
 
       - name: Build direct non-Gradle test APK
         shell: sh
