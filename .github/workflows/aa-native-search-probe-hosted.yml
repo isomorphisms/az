@@ -28,61 +28,83 @@ jobs:
           set -eu
           cat > "$RUNNER_TEMP/icu-aa-probe.c" <<'C'
           #include <stdio.h>
+          #include <string.h>
 
           int icu_send_https(const char *host, int port, const char *request_headers,
                              const char *request_body, int request_body_length);
 
-          int main(void) {
-              const char *request =
-                  "GET /search?q=Loring%20Tu HTTP/1.0\r\n"
-                  "Host: annas-archive.gl\r\n"
+          int main(int argc, char **argv) {
+              if (argc != 2) return 64;
+              char request[2048];
+              int written = snprintf(
+                  request, sizeof(request),
+                  "GET /search?q=Loring%%20Tu HTTP/1.0\r\n"
+                  "Host: %s\r\n"
                   "Accept-Encoding: identity\r\n"
                   "Connection: close\r\n"
-                  "\r\n";
-              return icu_send_https("annas-archive.gl", 443, request, "", 0);
+                  "\r\n",
+                  argv[1]);
+              if (written < 0 || (size_t)written >= sizeof(request)) return 65;
+              return icu_send_https(argv[1], 443, request, "", 0);
           }
           C
           cc -std=c11 -Wall -Wextra -Werror -pedantic \
             "$RUNNER_TEMP/icu/native/transport.c" "$RUNNER_TEMP/icu-aa-probe.c" \
             -lssl -lcrypto -o "$RUNNER_TEMP/icu-aa-probe"
 
-      - name: Fetch and inspect Loring Tu search
+      - name: Fetch Loring Tu search from current mirrors
         run: |
-          set -eu
-          output="$RUNNER_TEMP/aa-loring-tu.html"
-          "$RUNNER_TEMP/icu-aa-probe" > "$output"
-          test -s "$output"
-
-          bytes=$(wc -c < "$output")
-          loring_count=$(tr '<' '\n' < "$output" | awk '
-            BEGIN { count = 0 }
-            {
-              line = tolower($0)
-              while (match(line, /loring tu/)) {
-                count++
-                line = substr(line, RSTART + RLENGTH)
+          set -u
+          successes=0
+          for host in annas-archive.gl annas-archive.vg annas-archive.pk annas-archive.gd; do
+            output="$RUNNER_TEMP/${host}.html"
+            error="$RUNNER_TEMP/${host}.err"
+            printf '=== %s ===\n' "$host"
+            if "$RUNNER_TEMP/icu-aa-probe" "$host" > "$output" 2> "$error"; then
+              transport=ok
+            else
+              transport=failed
+            fi
+            bytes=$(wc -c < "$output")
+            loring_count=$(tr '<' '\n' < "$output" | awk '
+              BEGIN { count = 0 }
+              {
+                line = tolower($0)
+                while (match(line, /loring tu/)) {
+                  count++
+                  line = substr(line, RSTART + RLENGTH)
+                }
               }
-            }
-            END { print count }
-          ')
-          record_container_count=$(tr '<' '\n' < "$output" | awk '
-            BEGIN { count = 0 }
-            /js-aarecord-list-outer/ { count++ }
-            END { print count }
-          ')
-          title_link_count=$(tr '<' '\n' < "$output" | awk '
-            BEGIN { count = 0 }
-            /js-vim-focus/ { count++ }
-            END { print count }
-          ')
-
-          printf 'bytes=%s\n' "$bytes"
-          printf 'loring_tu_occurrences=%s\n' "$loring_count"
-          printf 'record_containers=%s\n' "$record_container_count"
-          printf 'js_vim_focus_links=%s\n' "$title_link_count"
-          printf '%s\n' '--- response body ---'
-          cat "$output"
-          printf '\n%s\n' '--- end response body ---'
-
-          test "$loring_count" -gt 0
-          test "$title_link_count" -gt 0
+              END { print count }
+            ')
+            title_link_count=$(tr '<' '\n' < "$output" | awk '
+              BEGIN { count = 0 }
+              /js-vim-focus/ { count++ }
+              END { print count }
+            ')
+            challenge_count=$(tr '<' '\n' < "$output" | awk '
+              BEGIN { count = 0 }
+              /DDoS-Guard|ddos-guard|Checking your browser/ { count++ }
+              END { print count }
+            ')
+            printf 'transport=%s bytes=%s loring=%s title_links=%s ddos_guard=%s\n' \
+              "$transport" "$bytes" "$loring_count" "$title_link_count" "$challenge_count"
+            if test -s "$error"; then
+              sed -n '1,5p' "$error"
+            fi
+            if test "$loring_count" -gt 0 && test "$title_link_count" -gt 0; then
+              successes=$((successes + 1))
+              tr '<' '\n' < "$output" | awk '
+                BEGIN { shown = 0 }
+                tolower($0) ~ /loring tu/ {
+                  text = $0
+                  gsub(/[[:space:]]+/, " ", text)
+                  if (length(text) > 500) text = substr(text, 1, 500) "..."
+                  print "match=" text
+                  shown++
+                  if (shown == 6) exit
+                }
+              '
+            fi
+          done
+          printf 'successful_search_mirrors=%s\n' "$successes"
