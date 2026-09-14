@@ -4,14 +4,13 @@ on:
   push:
     branches:
       - material3-search-ui
-  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   apk:
-    runs-on: [self-hosted, linux, debian]
+    runs-on: ubuntu-latest
     steps:
       - name: Check out exact source
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
