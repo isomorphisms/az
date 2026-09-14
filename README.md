@@ -7,7 +7,7 @@ small amount of structured data, reduces it to a price observation, and leaves
 the long-lived history in ordinary local files that IB or other programs can
 index later.
 
-The script is Grease/YSH-compatible shell and currently uses the `ysh` entry
+The scripts are Grease/YSH-compatible shell and currently use the `ysh` entry
 point supplied by the Grease/Oils tree.
 
 ## Today
@@ -27,6 +27,9 @@ ysh bin/az history B012345678
 # Once the AbeBooks client key is configured:
 ysh bin/abe 9780131457577
 ysh bin/abe used 9780131457577
+
+# On the AA branch, once an Anna's Archive member key is in AA:
+ysh bin/aa resolve 6722faecdb9370ad0d2e447cce370950
 ```
 
 `price` uses Amazon Creators API `GetItems` with `OffersV2` and appends one row
@@ -38,6 +41,10 @@ including shipping to the configured destination. `abe used` adds AbeBooks'
 `bookcondition=used` filter, so the result is specifically the cheapest
 delivered used listing rather than merely the cheapest listing of any
 condition. Used observations are recorded with method `abebooks-sws-used`.
+
+`aa resolve` calls Anna's Archive's member `fast_download.json` endpoint for an
+MD5 and prints the returned download URL. It uses ICU for HTTP and deliberately
+does not add an HTML search scraper or a curl fallback.
 
 The local ledger is append-only TSV:
 
@@ -84,14 +91,27 @@ and Far East Login-with-Amazon token endpoints respectively. Access tokens are
 cached locally until shortly before their one-hour expiry instead of requesting
 a new token for every price lookup.
 
-Dependencies are intentionally boring: Grease/YSH, `curl`, `jq`, `grep`,
-`sed`, `awk`, and `date`.
+Amazon and AbeBooks still use `curl`. The AA adapter uses ICU only; `jq` is used
+for JSON and URI encoding. The remaining small-text tools are `grep`, `sed`,
+`awk`, `tr`, and `date` as needed by each command.
 
 ```sh
 ysh bin/az doctor
+ysh bin/aa doctor
 make test
 sudo make install
 ```
+
+## Anna's Archive configuration
+
+`bin/aa` expects the member secret in the environment variable `AA` and only
+implements the stable JSON fast-download resolver. The `AA` GitHub Environment
+uses an Environment secret with the same name. The manual `AA live resolver`
+workflow maps `${{ secrets.AA }}` to `$AA` and exercises the resolver through
+ICU without printing the resolved URL in the Actions log.
+
+See [`docs/annas-archive.md`](docs/annas-archive.md) for the transport boundary,
+trusted-host rule, and current acceptance limits.
 
 ## Product identity
 
