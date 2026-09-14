@@ -33,9 +33,9 @@ maps `${{ secrets.AA }}` to the process environment variable `AA` for the
 resolver.
 
 The live workflow is manual because it uses a real membership credential and a
-real upstream service. It requires a self-hosted Debian runner with `ysh`, ICU,
-`jq`, `grep`, and `tr` available. It writes the resolved URL to runner temporary
-storage and checks its shape without printing it to the Actions log.
+real upstream service. It runs on GitHub-hosted Ubuntu 24.04 and requires `ysh`,
+ICU, `jq`, `grep`, and `tr` to be available. It writes the resolved URL to runner
+temporary storage and checks its shape without printing it to the Actions log.
 
 The upstream API requires the key in the request URL. Consequently the ICU
 process argument list briefly contains the key while the request runs. The
