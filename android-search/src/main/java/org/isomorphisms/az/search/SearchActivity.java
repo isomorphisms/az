@@ -17,15 +17,14 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Scanner;
 
 public final class SearchActivity extends Activity {
     public static final String EXTRA_RESULTS_TSV = "org.isomorphisms.az.SEARCH_RESULTS_TSV";
+    public static final String EXTRA_QUERY = "org.isomorphisms.az.SEARCH_QUERY";
 
     private static final int BG = Color.rgb(20, 18, 24);
     private static final int SURFACE = Color.rgb(33, 31, 38);
@@ -48,12 +47,29 @@ public final class SearchActivity extends Activity {
         getWindow().setNavigationBarColor(BG);
         setContentView(screen());
 
-        String supplied = getIntent().getStringExtra(EXTRA_RESULTS_TSV);
-        if (supplied != null && !supplied.isEmpty()) {
-            load(supplied, "shared results");
-        } else {
-            loadFixture();
+        Intent intent = getIntent();
+        String suppliedQuery = intent.getStringExtra(EXTRA_QUERY);
+        if (suppliedQuery != null) {
+            query.setText(suppliedQuery);
         }
+
+        String supplied = suppliedTsv(intent);
+        if (supplied != null && !supplied.isEmpty()) {
+            load(supplied);
+        } else {
+            render(Collections.emptyList(),
+                    "No results loaded · run the external az search handoff from Termux");
+        }
+    }
+
+    private String suppliedTsv(Intent intent) {
+        String supplied = intent.getStringExtra(EXTRA_RESULTS_TSV);
+        if ((supplied == null || supplied.isEmpty())
+                && Intent.ACTION_SEND.equals(intent.getAction())
+                && "text/plain".equals(intent.getType())) {
+            supplied = intent.getStringExtra(Intent.EXTRA_TEXT);
+        }
+        return supplied;
     }
 
     private View screen() {
@@ -65,7 +81,7 @@ public final class SearchActivity extends Activity {
         title.setPadding(dp(20), dp(18), dp(20), dp(2));
         root.addView(title, matchWrap());
 
-        TextView subtitle = text("Amazon search", 13, MUTED);
+        TextView subtitle = text("Amazon search results", 13, MUTED);
         subtitle.setPadding(dp(20), 0, dp(20), dp(12));
         root.addView(subtitle, matchWrap());
 
@@ -77,7 +93,7 @@ public final class SearchActivity extends Activity {
 
         query = new EditText(this);
         query.setSingleLine(true);
-        query.setHint("Search products");
+        query.setHint("Filter loaded results");
         query.setHintTextColor(MUTED);
         query.setTextColor(TEXT);
         query.setTextSize(16);
@@ -93,7 +109,7 @@ public final class SearchActivity extends Activity {
         search.addView(query, new LinearLayout.LayoutParams(0,
                 ViewGroup.LayoutParams.MATCH_PARENT, 1));
 
-        TextView go = button("Search", PRIMARY, ON_PRIMARY);
+        TextView go = button("Filter", PRIMARY, ON_PRIMARY);
         go.setOnClickListener(v -> filter());
         search.addView(go);
 
@@ -114,20 +130,13 @@ public final class SearchActivity extends Activity {
         return root;
     }
 
-    private void loadFixture() {
-        try (InputStream input = getAssets().open("sample-search.tsv");
-             Scanner scanner = new Scanner(input, "UTF-8").useDelimiter("\\A")) {
-            load(scanner.hasNext() ? scanner.next() : "", "sample results");
-        } catch (Exception error) {
-            status.setText("Could not load sample results");
-        }
-    }
-
-    private void load(String tsv, String label) {
+    private void load(String tsv) {
         try {
             source = SearchResults.parseTsv(tsv);
-            render(source, source.size() + " " + label + " · live transport not wired");
+            render(source, source.size() + " results from external az search");
         } catch (IllegalArgumentException error) {
+            source = Collections.emptyList();
+            render(source, "Could not parse external az search results");
             Toast.makeText(this, error.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
@@ -135,7 +144,7 @@ public final class SearchActivity extends Activity {
     private void filter() {
         String needle = query.getText().toString().trim().toLowerCase(Locale.ROOT);
         if (needle.isEmpty()) {
-            render(source, source.size() + " results · live transport not wired");
+            render(source, source.size() + " loaded az search results");
             return;
         }
         ArrayList<SearchResults.Item> matches = new ArrayList<>();
@@ -145,14 +154,14 @@ public final class SearchActivity extends Activity {
                 matches.add(item);
             }
         }
-        render(matches, matches.size() + " local matches · `az search` transport not wired");
+        render(matches, matches.size() + " matches in loaded az search results");
     }
 
     private void render(List<SearchResults.Item> items, String label) {
         status.setText(label);
         results.removeAllViews();
         if (items.isEmpty()) {
-            TextView empty = text("No matching products", 16, MUTED);
+            TextView empty = text("No products to show", 16, MUTED);
             empty.setGravity(Gravity.CENTER);
             empty.setPadding(0, dp(56), 0, dp(56));
             results.addView(empty, matchWrap());
