@@ -7,6 +7,7 @@ SHELL ?= /bin/sh
 test:
 	bash test/az-test.sh
 	bash test/abe-test.sh
+	bash test/android-search-test.sh
 
 install:
 	install -d "$(DESTDIR)$(PREFIX)/bin"
