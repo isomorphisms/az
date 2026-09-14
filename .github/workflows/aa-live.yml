@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   resolve:
-    runs-on: [self-hosted, linux, debian]
+    runs-on: ubuntu-24.04
     environment: AA
     env:
       AA: ${{ secrets.AA }}
