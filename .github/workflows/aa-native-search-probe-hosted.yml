@@ -80,18 +80,9 @@ jobs:
           printf 'loring_tu_occurrences=%s\n' "$loring_count"
           printf 'record_containers=%s\n' "$record_container_count"
           printf 'js_vim_focus_links=%s\n' "$title_link_count"
-
-          tr '<' '\n' < "$output" | awk '
-            BEGIN { shown = 0 }
-            tolower($0) ~ /loring tu/ {
-              text = $0
-              gsub(/[[:space:]]+/, " ", text)
-              if (length(text) > 500) text = substr(text, 1, 500) "..."
-              print "match=" text
-              shown++
-              if (shown == 12) exit
-            }
-          '
+          printf '%s\n' '--- response body ---'
+          cat "$output"
+          printf '\n%s\n' '--- end response body ---'
 
           test "$loring_count" -gt 0
           test "$title_link_count" -gt 0
