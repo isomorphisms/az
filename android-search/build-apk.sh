@@ -56,10 +56,13 @@ final_apk="$output_dir/az-search-debug.apk"
     -o "$base_apk" \
     "$compiled_resources"/*.flat
 
+# Android APIs belong on the ordinary class path here.  Using android.jar as
+# javac's boot class path removes the JDK's LambdaMetafactory and breaks the
+# Java 8 listener lambdas before d8 gets a chance to desugar them.
 javac \
     -source 8 \
     -target 8 \
-    -bootclasspath "$platform_jar" \
+    -classpath "$platform_jar" \
     -d "$classes_dir" \
     "$project_dir/src/main/java/org/isomorphisms/az/search/SearchResults.java" \
     "$project_dir/src/main/java/org/isomorphisms/az/search/SearchActivity.java"
