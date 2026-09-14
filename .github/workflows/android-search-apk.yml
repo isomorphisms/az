@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Ensure Android SDK inputs
         shell: sh
@@ -49,12 +51,31 @@ jobs:
           fi
           unzip -l "$apk"
           sha256sum "$apk" | tee android-search/build/az-search-debug.apk.sha256
+          git rev-parse HEAD | tee android-search/build/SOURCE-COMMIT.txt
 
-      - name: Retain phone test APK
+      - name: Write phone test instructions
+        shell: sh
+        run: |
+          cat > android-search/build/PHONE-TEST.txt <<'EOF'
+          1. Install az-search-debug.apk with Android's package installer.
+          2. Keep Creator credentials only in ~/.config/az/amazon-secret in Termux.
+          3. From this extracted bundle run:
+             ysh android-search/show-results.ysh 'Loring Tu'
+          4. Record separately whether the Activity launches and whether real results visibly render.
+
+          The APK itself has no INTERNET permission and contains no Creator credentials.
+          EOF
+
+      - name: Retain exact-head phone test bundle
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: az-search-phone-test-apk
+          name: az-search-phone-test-bundle
           path: |
             android-search/build/az-search-debug.apk
             android-search/build/az-search-debug.apk.sha256
+            android-search/build/SOURCE-COMMIT.txt
+            android-search/build/PHONE-TEST.txt
+            android-search/show-results.ysh
+            bin/az
+            config/amazon-public
           if-no-files-found: error
