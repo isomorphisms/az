@@ -1,0 +1,53 @@
+name: android-search-test-apk
+
+on:
+  pull_request:
+    paths:
+      - 'android-search/**'
+      - '.github/workflows/android-search-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-apk:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Ensure Android SDK inputs
+        shell: sh
+        run: |
+          set -eu
+          sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+
+      - name: Build direct non-Gradle test APK
+        shell: sh
+        run: |
+          set -eu
+          sh android-search/build-apk.sh
+
+      - name: Inspect test APK boundary
+        shell: sh
+        run: |
+          set -eu
+          apk=android-search/build/az-search-debug.apk
+          test -f "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/zipalign" -c -P 16 4 "$apk"
+          if "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump permissions "$apk" | grep -F 'android.permission.INTERNET'; then
+            echo 'unexpected INTERNET permission in AZ search APK' >&2
+            exit 1
+          fi
+          unzip -l "$apk"
+          sha256sum "$apk" | tee android-search/build/az-search-debug.apk.sha256
+
+      - name: Retain phone test APK
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: az-search-phone-test-apk
+          path: |
+            android-search/build/az-search-debug.apk
+            android-search/build/az-search-debug.apk.sha256
+          if-no-files-found: error
