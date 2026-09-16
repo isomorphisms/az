@@ -121,6 +121,24 @@ can already write something like `isbn:...` or another application's canonical
 product ID. This keeps Amazon as one replaceable source for prices rather than
 making the rest of the system an Amazon database.
 
+## SMS service
+
+`bin/idric_sms_service` is the command-line/filesystem half of the first SMS
+slice. It consumes the deterministic `idric-sms-request` executable supplied by
+Idric-Net, persists inbound messages, per-event consent, reminders,
+cancellations, STOP state, and a fake outbound transport in ordinary files.
+
+The full executable acceptance test requires the Idric-Net parser:
+
+```sh
+IDRIC_SMS_REQUEST=/path/to/idric-sms-request make test-sms
+```
+
+`make test` still performs syntax checks without pretending that a missing
+Idric-Net executable is an integration pass. See
+[`docs/sms-service.md`](docs/sms-service.md) for the state model and ownership
+boundary.
+
 ## Associates disclosure
 
 This distribution can generate Amazon links containing the Associates tag
