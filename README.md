@@ -1,6 +1,6 @@
 # az
 
-Small Grease command-line tools for product lookup and price observations.
+Small Grease-compatible command-line tools and service adapters.
 
 `az` deliberately does not reproduce Amazon's web application. It asks for a
 small amount of structured data, reduces it to a price observation, and leaves
