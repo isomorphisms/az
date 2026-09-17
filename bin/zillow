@@ -1,0 +1,114 @@
+#!/usr/bin/env ysh
+
+# Public Zillow Research data adapter.
+# This slice exposes only the exact public CSV documented below. It does not
+# call partner APIs, scrape consumer property pages, or imply API credentials.
+
+set -eu
+set -o pipefail
+
+: "${ICU:=icu}"
+
+research_dataset='zhvi-metro-all-homes-mid-tier-smoothed-seasonally-adjusted-monthly'
+research_data_url='https://files.zillowstatic.com/research/public_csvs/zhvi/Metro_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv'
+research_documentation_url='https://www.zillow.com/research/data/'
+
+usage() {
+  cat <<'USAGE'
+zillow -- narrow public Zillow Research data adapter
+
+usage:
+  zillow research url zhvi-metro-all-homes-mid-tier-smoothed-seasonally-adjusted-monthly
+  zillow research download zhvi-metro-all-homes-mid-tier-smoothed-seasonally-adjusted-monthly
+  zillow doctor
+
+`research url` prints the exact public Zillow Research CSV URL.
+`research download` streams that CSV to standard output through ICU.
+
+This command does not expose Zillow consumer property search, Zestimates,
+Bridge, mortgage partner, Mortech, Rentals, or dotloop interfaces.
+USAGE
+}
+
+need() {
+  command -v "$1" >/dev/null 2>&1 || {
+    printf 'zillow: required command not found: %s\n' "$1" >&2
+    return 127
+  }
+}
+
+require_supported_research_dataset() {
+  dataset=${1:-}
+  if test "$dataset" != "$research_dataset"; then
+    printf 'zillow: unsupported research dataset: %s\n' "$dataset" >&2
+    printf 'zillow: supported dataset: %s\n' "$research_dataset" >&2
+    return 2
+  fi
+}
+
+research_url() {
+  test "$#" -eq 1 || { usage >&2; return 2; }
+  require_supported_research_dataset "$1" || return
+  printf '%s\n' "$research_data_url"
+}
+
+research_download() {
+  test "$#" -eq 1 || { usage >&2; return 2; }
+  require_supported_research_dataset "$1" || return
+  need "$ICU" || return
+  "$ICU" get "$research_data_url"
+}
+
+cmd_research() {
+  test "$#" -ge 1 || { usage >&2; return 2; }
+  research_command=$1
+  shift
+  case "$research_command" in
+    url)
+      research_url "$@"
+      ;;
+    download)
+      research_download "$@"
+      ;;
+    *)
+      usage >&2
+      return 2
+      ;;
+  esac
+}
+
+cmd_doctor() {
+  status=0
+  if command -v "$ICU" >/dev/null 2>&1; then
+    printf 'ok\t%s\n' "$ICU"
+  else
+    printf 'missing\t%s\n' "$ICU"
+    status=1
+  fi
+  printf 'research_documentation\t%s\n' "$research_documentation_url"
+  printf 'research_dataset\t%s\n' "$research_dataset"
+  return "$status"
+}
+
+if test "$#" -eq 0; then
+  usage >&2
+  exit 2
+fi
+
+command=$1
+shift
+case "$command" in
+  research)
+    cmd_research "$@"
+    ;;
+  doctor)
+    cmd_doctor "$@"
+    ;;
+  help|-h|--help)
+    usage
+    ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac
