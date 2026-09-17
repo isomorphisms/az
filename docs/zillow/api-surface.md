@@ -46,14 +46,17 @@ Portal root: <https://www.zillowgroup.com/developers/>
 
 ## Mortgage
 
-### Get Current Rates
+### Get Current Rates / Historical Rates
 
 - Portal: <https://www.zillowgroup.com/developers/api/mortgage/get-current-rates/>
-- Documentation: <https://mortgageapi.zillow.com/api/getRates>
-- Request endpoint: `GET https://mortgageapi.zillow.com/getRates`
+- Historical-rate documentation: <https://mortgageapi.zillow.com/api/getRates>
+- Current-rate documentation: <https://mortgageapi.zillow.com/api/getCurrentRates>
+- Historical request endpoint: `GET https://mortgageapi.zillow.com/getRates`
+- Current request endpoint: `GET https://mortgageapi.zillow.com/getCurrentRates`
 - Authentication: no bearer credential is described, but an authorized `partnerId` is required
 - Responses: JSON
-- Main request controls include query groups, a date window, current-rate inclusion, aggregation, and gap filling
+- `getRates` controls include query groups, a date window, current-rate inclusion, aggregation, and gap filling
+- `getCurrentRates` accepts the same typed rate-query dictionary but returns current-rate results only
 - The typed query surface includes refinance/purchase, state or ZIP/property bucket, loan program, loan type, loan amount, loan-to-value, and credit-score buckets
 
 ### Lender Reviews

@@ -21,6 +21,7 @@ portal-transaction-management.html	fetch	https://www.zillowgroup.com/developers/
 portal-zestimates-api.html	fetch	https://www.zillowgroup.com/developers/api/zestimate/zestimates-api/
 portal-terms.html	fetch	https://www.zillowgroup.com/developers/terms/
 mortgage-get-rates.html	fetch	https://mortgageapi.zillow.com/api/getRates
+mortgage-get-current-rates.html	fetch	https://mortgageapi.zillow.com/api/getCurrentRates
 mortgage-lender-reviews.html	fetch	https://mortgageapi.zillow.com/api/zillowLenderReviews
 mortgage-api-examples.html	fetch	https://www.zillow.com/mortgage/api/
 mortgage-api-terms.html	linked-broken	https://www.zillow.com/howto/api/APITerms.htm
