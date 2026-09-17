@@ -20,3 +20,18 @@ replace it with a shell approximation just to make a local test pass.
 
 A syntax check is not an SMS integration receipt. Full SMS acceptance must name
 and execute the exact Idric-Net parser revision used by the test.
+
+## Zillow boundary
+
+Keep Zillow Research downloads, Zillow Mortgage partner calls, Bridge products,
+Mortech products, Zillow Rentals integrations, and dotloop OAuth as distinct
+interfaces. Do not flatten them into one generic request path.
+
+Do not substitute consumer-site page parsing for an unavailable documented API.
+Do not restore legacy ZWSID calls from old examples unless a current Zillow
+source establishes that the endpoint is still supported.
+
+The files under `docs/zillow/` document source locations and interface shape;
+they are not live-service acceptance. A documentation fetch, CSV fixture, or
+mock response does not establish permission, authentication, or successful API
+execution.
