@@ -24,6 +24,10 @@ geographic levels. That makes it a better first unauthenticated `zillow` command
 than pretending the commercial Zestimate/Public Records surfaces are public.
 It is also directly relevant to tract/ZIP/city/metro comparisons.
 
+`bin/zillow` now exposes an explicit catalog of the ten direct downloads shown
+by the current Research page's default selections. It does not manufacture
+unobserved geography/data-type URL combinations from filename patterns.
+
 A later authenticated slice can add documented interfaces only after credentials
 or partner access actually exist.
 
@@ -33,7 +37,7 @@ Keep these categories explicit in command names, configuration, tests, and
 receipts:
 
 - **Public download:** Zillow Research neighborhood/real-estate metrics.
-- **Partner ID:** Zillow Mortgage `getRates` and `zillowLenderReviews`.
+- **Partner ID:** Zillow Mortgage `getRates`, `getCurrentRates`, and `zillowLenderReviews`.
 - **Bridge approval/token:** Agent Reviews, MLS Listings, Public Records, and Zestimates.
 - **Mortech partner/MSA:** prospect, rate, LOS, lead-posting, and administration/integration products.
 - **Zillow Rentals integration approval:** rental listing feeds and lead callbacks.
@@ -44,13 +48,18 @@ credentials to call the service.
 
 ## Current directly documented mortgage endpoints
 
-The two Zillow-hosted typed mortgage references currently expose:
+The Zillow-hosted typed mortgage references currently expose:
 
 - `GET https://mortgageapi.zillow.com/getRates`
+- `GET https://mortgageapi.zillow.com/getCurrentRates`
 - `GET https://mortgageapi.zillow.com/zillowLenderReviews`
 
-Both require an authorized `partnerId`. Do not describe them as anonymous public
-APIs merely because the portal says there is no separate auth token.
+All require an authorized `partnerId`. Do not describe them as anonymous public
+APIs merely because the portal does not describe a separate bearer token.
+
+`bin/zillow` maps those three endpoints directly. Its fake-transport tests prove
+request construction and endpoint selection only; without an authorized partner
+ID they are not live-service acceptance.
 
 ## Bridge
 
@@ -100,6 +109,9 @@ For any future command:
 ## Transport
 
 The documentation mirror command uses ICU and writes only to the ignored
-`.cache/zillow-documentation/` tree. A future live Zillow adapter should also
-prefer the repository's small explicit transport style rather than adding a web
-framework or browser automation merely to make an endpoint convenient.
+`.cache/zillow-documentation/` tree. The live `bin/zillow` adapter also uses ICU
+for HTTP and `jq` only for URI encoding; it does not introduce browser
+automation, Python, or a web framework.
+
+See [`command-line.md`](command-line.md) for the executable commands and exact
+evidence boundary.
