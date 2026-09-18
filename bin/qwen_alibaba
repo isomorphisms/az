@@ -1,0 +1,230 @@
+#!/usr/bin/env ysh
+
+# Alibaba Cloud Model Studio adapter for Qwen coding models.
+# Keep the API key out of request bodies and refuse unapproved credential hosts.
+
+set -eu
+set -o pipefail
+
+: "${QWEN_MODEL:=qwen3-coder-next}"
+: "${QWEN_BASE_URL:=https://dashscope-intl.aliyuncs.com/compatible-mode/v1}"
+: "${QWEN_CURL:=curl}"
+
+CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}
+QWEN_CONFIG_DIR=${QWEN_CONFIG_DIR:-"$CONFIG_HOME/az"}
+QWEN_SECRET_FILE=${QWEN_SECRET_FILE:-"$QWEN_CONFIG_DIR/qwen-secret"}
+
+if test -f "$QWEN_SECRET_FILE"; then
+  . "$QWEN_SECRET_FILE"
+fi
+
+: "${DASHSCOPE_API_KEY:=}"
+: "${QWEN_SYSTEM_PROMPT:=You are a careful coding assistant.}"
+
+usage() {
+  cat <<'USAGE'
+qwen_alibaba -- Alibaba Model Studio Qwen API adapter
+
+usage:
+  qwen_alibaba chat WORDS...
+  qwen_alibaba chat < PROMPT
+  qwen_alibaba request [JSON-FILE|-]
+  qwen_alibaba doctor
+
+chat
+  Sends one system message and one user message to the OpenAI-compatible
+  chat/completions endpoint and prints only the assistant text.
+
+request
+  Sends caller-supplied OpenAI-compatible JSON to chat/completions and prints
+  the raw JSON response. If JSON-FILE is omitted or is -, input is read from
+  standard input. The request model must match QWEN_MODEL; this prevents a
+  background worker from silently selecting a cheaper/weaker model.
+
+doctor
+  Checks local dependencies and configuration without making a network call.
+
+Default model:
+  qwen3-coder-next
+
+Default endpoint:
+  https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+
+The API key is read from DASHSCOPE_API_KEY or ~/.config/az/qwen-secret.
+USAGE
+}
+
+need() {
+  command -v "$1" >/dev/null 2>&1 || {
+    printf 'qwen_alibaba: required command not found: %s\n' "$1" >&2
+    return 127
+  }
+}
+
+trusted_base_url() {
+  base=${QWEN_BASE_URL%/}
+  host=$(printf '%s\n' "$base" |
+    sed -n 's#^https://\([^/]*\)/compatible-mode/v1$#\1#p')
+
+  if test -z "$host"; then
+    printf 'qwen_alibaba: base URL must be HTTPS and end in /compatible-mode/v1: %s\n'       "$QWEN_BASE_URL" >&2
+    return 2
+  fi
+
+  case "$host" in
+    dashscope.aliyuncs.com|    dashscope-intl.aliyuncs.com|    dashscope-us.aliyuncs.com|    cn-hongkong.dashscope.aliyuncs.com|    *.cn-beijing.maas.aliyuncs.com|    *.ap-southeast-1.maas.aliyuncs.com|    *.ap-northeast-1.maas.aliyuncs.com|    *.eu-central-1.maas.aliyuncs.com|    *.us-east-1.maas.aliyuncs.com|    *.cn-hongkong.maas.aliyuncs.com)
+      printf '%s\n' "$base"
+      ;;
+    *)
+      printf 'qwen_alibaba: refusing to send the API key to unapproved host: %s\n'         "$host" >&2
+      return 2
+      ;;
+  esac
+}
+
+require_api_key() {
+  if test -z "$DASHSCOPE_API_KEY"; then
+    printf 'qwen_alibaba: DASHSCOPE_API_KEY is not configured\n' >&2
+    printf 'qwen_alibaba: set it in the environment or %s\n' "$QWEN_SECRET_FILE" >&2
+    return 2
+  fi
+}
+
+post_chat_json() {
+  body=$1
+
+  need "$QWEN_CURL" || return
+  require_api_key || return
+  base=$(trusted_base_url) || return
+
+  if ! response=$("$QWEN_CURL" --fail-with-body -sS       -X POST "$base/chat/completions"       -H "Authorization: Bearer $DASHSCOPE_API_KEY"       -H 'Content-Type: application/json'       --data "$body"); then
+    printf 'qwen_alibaba: Model Studio request failed\n%s\n' "$response" >&2
+    return 1
+  fi
+
+  printf '%s\n' "$response"
+}
+
+read_request_body() {
+  test "$#" -le 1 || { usage >&2; return 2; }
+
+  if test "$#" -eq 1 && test "$1" != '-'; then
+    cat -- "$1"
+  else
+    cat
+  fi
+}
+
+normalize_request() {
+  input=$1
+  need jq || return
+
+  if ! normalized=$(printf '%s' "$input" |
+      jq -ce --arg model "$QWEN_MODEL" '
+        if type != "object" then error("request must be a JSON object")
+        elif (.model // $model) != $model then
+          error("request model does not match QWEN_MODEL")
+        else
+          .model = $model
+        end
+      ' 2>/dev/null); then
+    printf 'qwen_alibaba: request must be valid JSON and use model %s\n'       "$QWEN_MODEL" >&2
+    return 2
+  fi
+
+  printf '%s\n' "$normalized"
+}
+
+cmd_request() {
+  body=$(read_request_body "$@") || return
+  body=$(normalize_request "$body") || return
+  post_chat_json "$body"
+}
+
+cmd_chat() {
+  need jq || return
+
+  if test "$#" -gt 0; then
+    prompt=$*
+  else
+    prompt=$(cat)
+  fi
+
+  if test -z "$prompt"; then
+    printf 'qwen_alibaba: chat prompt is empty\n' >&2
+    return 2
+  fi
+
+  body=$(jq -cn     --arg model "$QWEN_MODEL"     --arg system "$QWEN_SYSTEM_PROMPT"     --arg user "$prompt" '
+      {
+        model: $model,
+        messages:
+          (if $system == "" then
+             [{role:"user", content:$user}]
+           else
+             [{role:"system", content:$system},
+              {role:"user", content:$user}]
+           end),
+        stream: false
+      }
+    ')
+
+  response=$(post_chat_json "$body") || return
+
+  if ! assistant=$(printf '%s' "$response" |
+      jq -er '.choices[0].message.content | select(type == "string")' 2>/dev/null); then
+    printf 'qwen_alibaba: response had no assistant message content\n' >&2
+    printf '%s\n' "$response" >&2
+    return 1
+  fi
+
+  printf '%s\n' "$assistant"
+}
+
+cmd_doctor() {
+  status=0
+
+  for dependency in "$QWEN_CURL" jq sed cat; do
+    if command -v "$dependency" >/dev/null 2>&1; then
+      printf 'ok\t%s\n' "$dependency"
+    else
+      printf 'missing\t%s\n' "$dependency"
+      status=1
+    fi
+  done
+
+  if base=$(trusted_base_url 2>/dev/null); then
+    printf 'base_url\t%s\n' "$base"
+  else
+    printf 'base_url\tunapproved\n'
+    status=1
+  fi
+
+  printf 'model\t%s\n' "$QWEN_MODEL"
+
+  if test -n "$DASHSCOPE_API_KEY"; then
+    printf 'api_key\tconfigured\n'
+  else
+    printf 'api_key\tmissing\n'
+    status=1
+  fi
+
+  return "$status"
+}
+
+command=${1:-help}
+if test "$#" -gt 0; then
+  shift
+fi
+
+case "$command" in
+  chat) cmd_chat "$@" ;;
+  request) cmd_request "$@" ;;
+  doctor) cmd_doctor "$@" ;;
+  help|-h|--help) usage ;;
+  *)
+    printf 'qwen_alibaba: unknown command: %s\n' "$command" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
