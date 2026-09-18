@@ -193,8 +193,9 @@ cached_token() {
   esac
 
   now=$(date +%s)
+  refresh_before=$(awk -v expires="$expires" 'BEGIN { print expires - 60 }')
   # Leave a one-minute margin so a token cannot expire halfway through a call.
-  if test "$now" -lt "$((expires - 60))" && test -n "$token"; then
+  if test "$now" -lt "$refresh_before" && test -n "$token"; then
     printf '%s\n' "$token"
   fi
 
@@ -240,7 +241,7 @@ amazon_token() {
 
   mkdir -p "$AZ_CACHE_DIR"
   now=$(date +%s)
-  expires=$((now + expires_in))
+  expires=$(awk -v now="$now" -v expires_in="$expires_in" 'BEGIN { print now + expires_in }')
   umask 077
   printf '%s\t%s\n' "$expires" "$token" > "$AZ_TOKEN_FILE"
   printf '%s\n' "$token"
