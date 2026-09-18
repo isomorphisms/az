@@ -33,9 +33,9 @@ jobs:
       - name: Resolve through ICU
         run: |
           cd "$RUNNER_TEMP/az-aa"
-          command -v ysh
+          command -v grease
           command -v icu
           command -v jq
-          ysh bin/aa resolve "$AA_MD5" > "$RUNNER_TEMP/aa-download-url"
+          grease bin/aa resolve "$AA_MD5" > "$RUNNER_TEMP/aa-download-url"
           test -s "$RUNNER_TEMP/aa-download-url"
           grep -Eq '^https?://' "$RUNNER_TEMP/aa-download-url"
