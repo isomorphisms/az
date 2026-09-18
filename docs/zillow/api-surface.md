@@ -239,7 +239,7 @@ Zillow page explicitly points back to a legacy endpoint.
 plus the public documentation targets linked from it. Run:
 
 ```sh
-ysh bin/zillow_mirror_documentation
+grease bin/zillow_mirror_documentation
 ```
 
 The command writes fetched source pages under `.cache/zillow-documentation/`,
