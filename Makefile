@@ -9,6 +9,7 @@ test:
 	bash test/abe-test.sh
 	bash test/aa-test.sh
 	bash test/zillow-test.sh
+	bash test/qwen-alibaba-test.sh
 	sh -n bin/idric_sms_service
 	sh -n test/sms-service-test.sh
 
@@ -21,4 +22,5 @@ install:
 	install -m 0755 bin/abe "$(DESTDIR)$(PREFIX)/bin/abe"
 	install -m 0755 bin/aa "$(DESTDIR)$(PREFIX)/bin/aa"
 	install -m 0755 bin/zillow "$(DESTDIR)$(PREFIX)/bin/zillow"
+	install -m 0755 bin/qwen_alibaba "$(DESTDIR)$(PREFIX)/bin/qwen_alibaba"
 	install -m 0755 bin/idric_sms_service "$(DESTDIR)$(PREFIX)/bin/idric_sms_service"
