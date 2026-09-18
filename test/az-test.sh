@@ -37,7 +37,12 @@ expect_eq \
   'URL ASIN extraction'
 
 doctor=$("$AZ_SHELL" "$AZ" doctor)
-[[ "$doctor" == *
+printf '%s\n' "$doctor" | grep -F "$(printf 'marketplace\twww.amazon.com')" >/dev/null ||
+  fail 'doctor did not report the configured marketplace'
+printf '%s\n' "$doctor" | grep -F "$(printf 'ok\tawk')" >/dev/null ||
+  fail 'doctor did not complete dependency checks'
+
+# Manual observation is immediately useful before Creators credentials exist.
 "$AZ_SHELL" "$AZ" observe B012345678 19.99 >/dev/null
 PRICE_FILE="$XDG_STATE_HOME/az/prices.tsv"
 [[ -f "$PRICE_FILE" ]] || fail 'price ledger was not created'
