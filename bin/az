@@ -73,19 +73,22 @@ EOF
 }
 
 need() {
-  command -v "$1" >/dev/null 2>&1 || {
-    printf 'az: required command not found: %s\n' "$1" >&2
-    exit 127
-  }
+  if command -v "$1" >/dev/null 2>&1; then
+    return 0
+  fi
+  printf 'az: required command not found: %s\n' "$1" >&2
+  exit 127
 }
 
 extract_asin() {
   input=$1
 
-  if printf '%s\n' "$input" | grep -Eq '^[[:alnum:]]{10}$'; then
-    printf '%s\n' "$input" | tr '[:lower:]' '[:upper:]'
-    return 0
-  fi
+  case "$input" in
+    [[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]])
+      printf '%s\n' "$input" | tr '[:lower:]' '[:upper:]'
+      return 0
+      ;;
+  esac
 
   asin=$(printf '%s\n' "$input" |
     sed -nE 's#.*(/dp/|/gp/product/)([[:alnum:]]{10})([^[:alnum:]].*)?$#\2#p' |
@@ -105,11 +108,12 @@ history_product() {
   case "$input" in
     http://*|https://*) extract_asin "$input" ;;
     *)
-      if printf '%s\n' "$input" | grep -Eq '^[[:alnum:]]{10}$'; then
-        printf '%s\n' "$input" | tr '[:lower:]' '[:upper:]'
-      else
-        printf '%s\n' "$input"
-      fi
+      case "$input" in
+        [[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]])
+          printf '%s\n' "$input" | tr '[:lower:]' '[:upper:]'
+          ;;
+        *) printf '%s\n' "$input" ;;
+      esac
       ;;
   esac
 }
@@ -277,12 +281,18 @@ record_observation() {
 }
 
 cmd_link() {
-  test "$#" -eq 1 || { usage >&2; return 2; }
+  if ! test "$#" -eq 1; then
+    usage >&2
+    return 2
+  fi
   amazon_link "$1"
 }
 
 cmd_price() {
-  test "$#" -eq 1 || { usage >&2; return 2; }
+  if ! test "$#" -eq 1; then
+    usage >&2
+    return 2
+  fi
   need jq
   asin=$(extract_asin "$1")
 
@@ -325,7 +335,10 @@ EOF
 }
 
 cmd_search() {
-  test "$#" -ge 1 || { usage >&2; return 2; }
+  if ! test "$#" -ge 1; then
+    usage >&2
+    return 2
+  fi
   need jq
   query=$*
 
@@ -353,7 +366,10 @@ cmd_search() {
 }
 
 cmd_history() {
-  test "$#" -eq 1 || { usage >&2; return 2; }
+  if ! test "$#" -eq 1; then
+    usage >&2
+    return 2
+  fi
   product=$(history_product "$1")
 
   if ! test -f "$AZ_PRICE_FILE"; then
@@ -365,7 +381,10 @@ cmd_history() {
 }
 
 cmd_observe() {
-  test "$#" -ge 2 && test "$#" -le 4 || { usage >&2; return 2; }
+  if test "$#" -lt 2 || test "$#" -gt 4; then
+    usage >&2
+    return 2
+  fi
   asin=$(extract_asin "$1")
   amount=$2
   currency=${3:-USD}
@@ -385,7 +404,10 @@ cmd_observe() {
 }
 
 cmd_record() {
-  test "$#" -ge 5 && test "$#" -le 6 || { usage >&2; return 2; }
+  if test "$#" -lt 5 || test "$#" -gt 6; then
+    usage >&2
+    return 2
+  fi
   source=$1
   product=$2
   amount=$3
