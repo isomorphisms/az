@@ -7,6 +7,29 @@ set -eu
 set -o pipefail
 
 TAB=$(printf '\t')
+
+# bin/ysh keeps inherited environment values in ENV rather than creating
+# exported shell variables.  Import only the variables this POSIX-compatible
+# script consumes; Bash skips this block.
+if shopt -q no_exported 2>/dev/null; then
+  eval '
+HOME=$[get(ENV, "HOME") if get(ENV, "HOME") !== null else ""]
+XDG_CONFIG_HOME=$[get(ENV, "XDG_CONFIG_HOME") if get(ENV, "XDG_CONFIG_HOME") !== null else ""]
+XDG_STATE_HOME=$[get(ENV, "XDG_STATE_HOME") if get(ENV, "XDG_STATE_HOME") !== null else ""]
+XDG_CACHE_HOME=$[get(ENV, "XDG_CACHE_HOME") if get(ENV, "XDG_CACHE_HOME") !== null else ""]
+AZ_CONFIG_DIR=$[get(ENV, "AZ_CONFIG_DIR") if get(ENV, "AZ_CONFIG_DIR") !== null else ""]
+AZ_PRICE_FILE=$[get(ENV, "AZ_PRICE_FILE") if get(ENV, "AZ_PRICE_FILE") !== null else ""]
+AZ_TOKEN_FILE=$[get(ENV, "AZ_TOKEN_FILE") if get(ENV, "AZ_TOKEN_FILE") !== null else ""]
+AZ_MARKETPLACE=$[get(ENV, "AZ_MARKETPLACE") if get(ENV, "AZ_MARKETPLACE") !== null else ""]
+AZ_PARTNER_TAG=$[get(ENV, "AZ_PARTNER_TAG") if get(ENV, "AZ_PARTNER_TAG") !== null else ""]
+AZ_CREATORS_API_BASE=$[get(ENV, "AZ_CREATORS_API_BASE") if get(ENV, "AZ_CREATORS_API_BASE") !== null else ""]
+AZ_AMAZON_CREDENTIAL_ID=$[get(ENV, "AZ_AMAZON_CREDENTIAL_ID") if get(ENV, "AZ_AMAZON_CREDENTIAL_ID") !== null else ""]
+AZ_AMAZON_CREDENTIAL_SECRET=$[get(ENV, "AZ_AMAZON_CREDENTIAL_SECRET") if get(ENV, "AZ_AMAZON_CREDENTIAL_SECRET") !== null else ""]
+AZ_AMAZON_CREDENTIAL_VERSION=$[get(ENV, "AZ_AMAZON_CREDENTIAL_VERSION") if get(ENV, "AZ_AMAZON_CREDENTIAL_VERSION") !== null else ""]
+AZ_AMAZON_TOKEN_ENDPOINT=$[get(ENV, "AZ_AMAZON_TOKEN_ENDPOINT") if get(ENV, "AZ_AMAZON_TOKEN_ENDPOINT") !== null else ""]
+'
+fi
+
 case "$0" in
   */*) script_parent=${0%/*} ;;
   *) script_parent=. ;;
