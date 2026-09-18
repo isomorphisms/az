@@ -219,13 +219,10 @@ amazon_token() {
     --arg secret "$AZ_AMAZON_CREDENTIAL_SECRET" \
     '{grant_type:"client_credentials", client_id:$id, client_secret:$secret, scope:"creatorsapi::default"}')
 
-  if ! response=$(curl --fail-with-body -sS \
-      -X POST "$endpoint" \
-      -H 'Content-Type: application/json' \
-      --data "$payload"); then
-    printf 'az: Amazon token request failed\n%s\n' "$response" >&2
-    return 1
-  fi
+  response=$(curl --fail-with-body -sS \
+    -X POST "$endpoint" \
+    -H 'Content-Type: application/json' \
+    --data "$payload")
 
   token=$(printf '%s' "$response" | jq -r '.access_token // empty')
   expires_in=$(printf '%s' "$response" | jq -r '.expires_in // 3600')
@@ -254,15 +251,12 @@ amazon_post() {
   need curl
   token=$(amazon_token)
 
-  if ! response=$(curl --fail-with-body -sS \
-      -X POST "$AZ_CREATORS_API_BASE/$operation" \
-      -H "Authorization: Bearer $token" \
-      -H 'Content-Type: application/json' \
-      -H "x-marketplace: $AZ_MARKETPLACE" \
-      --data "$body"); then
-    printf 'az: Creators API request failed\n%s\n' "$response" >&2
-    return 1
-  fi
+  response=$(curl --fail-with-body -sS \
+    -X POST "$AZ_CREATORS_API_BASE/$operation" \
+    -H "Authorization: Bearer $token" \
+    -H 'Content-Type: application/json' \
+    -H "x-marketplace: $AZ_MARKETPLACE" \
+    --data "$body")
 
   printf '%s\n' "$response"
 }
