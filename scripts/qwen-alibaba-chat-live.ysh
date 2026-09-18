@@ -1,0 +1,57 @@
+#!/usr/bin/env ysh
+
+# Paid live smoke for Alibaba Model Studio Chat Completions.
+# This script is intentionally not part of make test.
+
+set -eu
+set -o pipefail
+
+script_directory=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+repository_directory=$(CDPATH= cd -- "$script_directory/.." && pwd)
+qwen_alibaba="$repository_directory/bin/qwen_alibaba"
+
+: "${QWEN_MODEL:=qwen3-coder-next}"
+sentinel='AZ_QWEN_CHAT_OK'
+
+command -v jq >/dev/null 2>&1 || {
+  printf 'FAIL\tmissing_dependency\tjq\n' >&2
+  exit 127
+}
+
+request=$(jq -cn   --arg model "$QWEN_MODEL"   --arg sentinel "$sentinel" '
+    {
+      model: $model,
+      messages: [
+        {
+          role: "user",
+          content: ("Reply with the exact token " + $sentinel + " and nothing else.")
+        }
+      ],
+      stream: false
+    }
+  ')
+
+response=$(printf '%s\n' "$request" | ysh "$qwen_alibaba" request -)
+
+returned_model=$(printf '%s' "$response" | jq -r '.model // ""')
+content=$(printf '%s' "$response" | jq -r '.choices[0].message.content // ""')
+input_tokens=$(printf '%s' "$response" | jq -r '.usage.prompt_tokens // .usage.input_tokens // ""')
+output_tokens=$(printf '%s' "$response" | jq -r '.usage.completion_tokens // .usage.output_tokens // ""')
+response_id=$(printf '%s' "$response" | jq -r '.id // ""')
+
+if ! printf '%s\n' "$content" | grep -F "$sentinel" >/dev/null; then
+  printf 'FAIL\tchat_completions\tmissing_sentinel\n' >&2
+  printf 'model_requested\t%s\n' "$QWEN_MODEL" >&2
+  printf 'model_returned\t%s\n' "$returned_model" >&2
+  printf 'response_id\t%s\n' "$response_id" >&2
+  printf 'assistant_text\t%s\n' "$content" >&2
+  exit 1
+fi
+
+printf 'PASS\tchat_completions\n'
+printf 'model_requested\t%s\n' "$QWEN_MODEL"
+printf 'model_returned\t%s\n' "$returned_model"
+printf 'response_id\t%s\n' "$response_id"
+printf 'input_tokens\t%s\n' "$input_tokens"
+printf 'output_tokens\t%s\n' "$output_tokens"
+printf 'sentinel\t%s\n' "$sentinel"
