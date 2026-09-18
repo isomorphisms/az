@@ -46,9 +46,10 @@ Never send `DASHSCOPE_API_KEY` to an arbitrary OpenAI-compatible endpoint.
 Credential-bearing requests must pass the adapter's Alibaba-host check.
 
 Fake-transport tests establish request construction and host-policy behavior
-only. They are not live Model Studio acceptance. Record real authentication,
-model availability, inference, and any tool-calling behavior as separate
-evidence.
+only. They are not live Model Studio acceptance. The scripts under
+`scripts/qwen-alibaba-*-live.ysh` are opt-in paid Grease/YSH probes and must
+remain outside the ordinary test target. Record their exact endpoint/model
+receipts separately; a Responses basic-text pass is not tool-use acceptance.
 
 Do not give the model GitHub merge authority merely because API inference works.
 The planned repository-maintenance worker keeps GitHub credentials and
