@@ -366,7 +366,7 @@ cmd_history() {
 
 cmd_observe() {
   test "$#" -ge 2 && test "$#" -le 4 || { usage >&2; return 2; }
-  asin=$(extract_asin "$1") || return
+  asin=$(extract_asin "$1")
   amount=$2
   currency=${3:-USD}
 
