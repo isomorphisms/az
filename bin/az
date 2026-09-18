@@ -358,7 +358,11 @@ cmd_search() {
     return 2
   fi
   need jq
-  query=$*
+  query=$1
+  shift
+  for word in "$@"; do
+    query="$query $word"
+  done
 
   body=$(jq -cn \
     --arg query "$query" \
