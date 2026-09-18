@@ -51,9 +51,9 @@ jobs:
           )
           test -x "$source_dir/_bin/cxx-opt-sh/ysh"
           cat > "$RUNNER_TEMP/grease" <<EOF
-#!/bin/sh
-exec "$source_dir/_bin/cxx-opt-sh/ysh" "\$@"
-EOF
+          #!/bin/sh
+          exec "$source_dir/_bin/cxx-opt-sh/ysh" "\$@"
+          EOF
           chmod +x "$RUNNER_TEMP/grease"
           echo "GREASE=$RUNNER_TEMP/grease" >> "$GITHUB_ENV"
       - name: Exercise az under Grease defaults
