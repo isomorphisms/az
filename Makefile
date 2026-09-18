@@ -2,7 +2,7 @@ PREFIX ?= /usr/local
 DESTDIR ?=
 SHELL ?= /bin/sh
 
-.PHONY: test test-sms install
+.PHONY: test test-sms test-qwen-live test-qwen-live-chat test-qwen-live-responses install
 
 test:
 	bash test/az-test.sh
@@ -15,6 +15,14 @@ test:
 
 test-sms:
 	sh test/sms-service-test.sh
+
+test-qwen-live: test-qwen-live-chat test-qwen-live-responses
+
+test-qwen-live-chat:
+	ysh scripts/qwen-alibaba-chat-live.ysh
+
+test-qwen-live-responses:
+	ysh scripts/qwen-alibaba-responses-live.ysh
 
 install:
 	install -d "$(DESTDIR)$(PREFIX)/bin"
