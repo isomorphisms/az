@@ -13,7 +13,14 @@ request_record="$temporary_directory/request"
 cat > "$fake_curl" <<'FAKE_CURL'
 #!/bin/sh
 printf '%s\n' "$@" > "$QWEN_TEST_REQUEST_RECORD"
-printf '%s\n' '{"id":"chatcmpl-test","model":"qwen3-coder-next","choices":[{"index":0,"message":{"role":"assistant","content":"patched"},"finish_reason":"stop"}],"usage":{"prompt_tokens":11,"completion_tokens":1,"total_tokens":12}}'
+case "$*" in
+  */responses*)
+    printf '%s\n' '{"id":"resp-test","model":"qwen3-coder-next","object":"response","status":"completed","output":[{"type":"message","role":"assistant","status":"completed","content":[{"type":"output_text","text":"responded"}]}],"usage":{"input_tokens":7,"output_tokens":1,"total_tokens":8}}'
+    ;;
+  *)
+    printf '%s\n' '{"id":"chatcmpl-test","model":"qwen3-coder-next","choices":[{"index":0,"message":{"role":"assistant","content":"patched"},"finish_reason":"stop"}],"usage":{"prompt_tokens":11,"completion_tokens":1,"total_tokens":12}}'
+    ;;
+esac
 FAKE_CURL
 chmod +x "$fake_curl"
 
@@ -40,6 +47,15 @@ test "$(printf '%s' "$raw_response" | jq -r '.choices[0].message.content')" = 'p
 request_body=$(awk 'previous == "--data" { print; exit } { previous = $0 }' "$request_record")
 test "$(printf '%s' "$request_body" | jq -r '.model')" = 'qwen3-coder-next'
 test "$(printf '%s' "$request_body" | jq -r '.messages[0].content')" = 'raw request'
+
+responses_output=$(printf '%s\n' '{"input":"responses request"}' |
+  bash "$qwen_alibaba" response -)
+test "$(printf '%s' "$responses_output" | jq -r '.object')" = 'response'
+test "$(printf '%s' "$responses_output" | jq -r '.output[0].content[0].text')" = 'responded'
+grep -Fx 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/responses'   "$request_record" >/dev/null
+request_body=$(awk 'previous == "--data" { print; exit } { previous = $0 }' "$request_record")
+test "$(printf '%s' "$request_body" | jq -r '.model')" = 'qwen3-coder-next'
+test "$(printf '%s' "$request_body" | jq -r '.input')" = 'responses request'
 
 rm -f "$request_record"
 if printf '%s\n' '{"model":"qwen3-coder-30b-a3b-instruct","messages":[]}' |
