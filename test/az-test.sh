@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT=$(cd -- "$(dirname -- "$0")/.." && pwd)
 AZ="$ROOT/bin/az"
+AZ_SHELL=${AZ_SHELL:-bash}
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
@@ -27,16 +28,16 @@ expect_eq() {
 # Public affiliate-link primitive.
 expect_eq \
   'https://www.amazon.com/dp/B012345678?tag=macguyver03-20' \
-  "$(bash "$AZ" link B012345678)" \
+  "$("$AZ_SHELL" "$AZ" link B012345678)" \
   'ASIN link'
 
 expect_eq \
   'https://www.amazon.com/dp/B012345678?tag=macguyver03-20' \
-  "$(bash "$AZ" link 'https://www.amazon.com/dp/b012345678?th=1')" \
+  "$("$AZ_SHELL" "$AZ" link 'https://www.amazon.com/dp/b012345678?th=1')" \
   'URL ASIN extraction'
 
 # Manual observation is immediately useful before Creators credentials exist.
-bash "$AZ" observe B012345678 19.99 >/dev/null
+"$AZ_SHELL" "$AZ" observe B012345678 19.99 >/dev/null
 PRICE_FILE="$XDG_STATE_HOME/az/prices.tsv"
 [[ -f "$PRICE_FILE" ]] || fail 'price ledger was not created'
 [[ $(wc -l < "$PRICE_FILE") -eq 2 ]] || fail 'manual observation should add one row'
@@ -44,9 +45,9 @@ grep -F $'www.amazon.com\tmanual\tB012345678\t19.99\tUSD\thttps://www.amazon.com
   fail 'manual observation row is wrong'
 
 # Provider-neutral records use the same ledger and history lookup.
-bash "$AZ" record example.test isbn:9780000000000 8.50 USD \
+"$AZ_SHELL" "$AZ" record example.test isbn:9780000000000 8.50 USD \
   https://example.test/book html >/dev/null
-history=$(bash "$AZ" history isbn:9780000000000)
+history=$("$AZ_SHELL" "$AZ" history isbn:9780000000000)
 [[ "$history" == *$'example.test\thtml\tisbn:9780000000000\t8.50\tUSD\thttps://example.test/book'* ]] ||
   fail 'provider-neutral history lookup failed'
 
@@ -88,14 +89,14 @@ export AZ_AMAZON_CREDENTIAL_VERSION='3.1'
 export AZ_AMAZON_TOKEN_ENDPOINT='https://mock/token'
 export AZ_CREATORS_API_BASE='https://mock'
 
-api_price=$(bash "$AZ" price B012345678)
+api_price=$("$AZ_SHELL" "$AZ" price B012345678)
 [[ "$api_price" == *$'B012345678\t23.45\tUSD\thttps://www.amazon.com/dp/B012345678?tag=macguyver03-20&linkCode=ogi'* ]] ||
   fail 'Creators price output is wrong'
 
 grep -F $'www.amazon.com\tcreators-api\tB012345678\t23.45\tUSD\thttps://www.amazon.com/dp/B012345678?tag=macguyver03-20&linkCode=ogi' "$PRICE_FILE" >/dev/null ||
   fail 'Creators price was not recorded'
 
-search=$(bash "$AZ" search small useful book)
+search=$("$AZ_SHELL" "$AZ" search small useful book)
 [[ "$search" == *$'B098765432\t12.34\tUSD\thttps://www.amazon.com/dp/B098765432?tag=macguyver03-20&linkCode=osi\tA Small Useful Book'* ]] ||
   fail 'Creators search output is wrong'
 
