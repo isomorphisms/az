@@ -1,4 +1,4 @@
-#!/usr/bin/env ysh
+#!/usr/bin/env grease
 
 # Fetch the publicly reachable documentation pages listed in
 # docs/zillow/mirror-sources.tsv into the ignored local .cache tree.

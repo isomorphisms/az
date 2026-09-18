@@ -35,3 +35,12 @@ The files under `docs/zillow/` document source locations and interface shape;
 they are not live-service acceptance. A documentation fetch, CSV fixture, or
 mock response does not establish permission, authentication, or successful API
 execution.
+
+## Grease consumer boundary
+
+Grease is the consumer-facing shell language and command for the Grease-based
+programs in this repository. Use `grease` in shebangs, examples, workflows,
+receipts, and human-facing instructions. Do not invoke or name `ysh` as the
+consumer runtime. The inherited Oils implementation is an internal Grease
+implementation detail and belongs only in implementation/provenance discussion
+inside the Grease/Oils repositories.

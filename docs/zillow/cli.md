@@ -19,8 +19,8 @@ It maps exactly to:
 Use:
 
 ```sh
-ysh bin/zillow research url zhvi-metro-all-homes-mid-tier-smoothed-seasonally-adjusted-monthly
-ysh bin/zillow research download zhvi-metro-all-homes-mid-tier-smoothed-seasonally-adjusted-monthly > zhvi.csv
+grease bin/zillow research url zhvi-metro-all-homes-mid-tier-smoothed-seasonally-adjusted-monthly
+grease bin/zillow research download zhvi-metro-all-homes-mid-tier-smoothed-seasonally-adjusted-monthly > zhvi.csv
 ```
 
 `url` is inspectable and performs no network request. `download` streams the

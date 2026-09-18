@@ -1,4 +1,4 @@
-#!/usr/bin/env ysh
+#!/usr/bin/env grease
 
 # Zillow command-line adapter for documented Zillow Research downloads and
 # Zillow-hosted mortgage partner endpoints. No consumer-page scraping.
