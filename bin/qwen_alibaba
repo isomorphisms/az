@@ -29,6 +29,7 @@ usage:
   qwen_alibaba chat WORDS...
   qwen_alibaba chat < PROMPT
   qwen_alibaba request [JSON-FILE|-]
+  qwen_alibaba response [JSON-FILE|-]
   qwen_alibaba doctor
 
 chat
@@ -40,6 +41,12 @@ request
   the raw JSON response. If JSON-FILE is omitted or is -, input is read from
   standard input. The request model must match QWEN_MODEL; this prevents a
   background worker from silently selecting a cheaper/weaker model.
+
+response
+  Sends caller-supplied OpenAI-compatible JSON to the Responses API and prints
+  the raw JSON response. This is kept distinct from chat/completions so live
+  smoke tests can establish which interface the configured model actually
+  accepts.
 
 doctor
   Checks local dependencies and configuration without making a network call.
@@ -90,15 +97,16 @@ require_api_key() {
   fi
 }
 
-post_chat_json() {
-  body=$1
+post_openai_json() {
+  endpoint=$1
+  body=$2
 
   need "$QWEN_CURL" || return
   require_api_key || return
   base=$(trusted_base_url) || return
 
-  if ! response=$("$QWEN_CURL" --fail-with-body -sS       -X POST "$base/chat/completions"       -H "Authorization: Bearer $DASHSCOPE_API_KEY"       -H 'Content-Type: application/json'       --data "$body"); then
-    printf 'qwen_alibaba: Model Studio request failed\n%s\n' "$response" >&2
+  if ! response=$("$QWEN_CURL" --fail-with-body -sS       -X POST "$base/$endpoint"       -H "Authorization: Bearer $DASHSCOPE_API_KEY"       -H 'Content-Type: application/json'       --data "$body"); then
+    printf 'qwen_alibaba: Model Studio %s request failed\n%s\n' "$endpoint" "$response" >&2
     return 1
   fi
 
@@ -138,7 +146,13 @@ normalize_request() {
 cmd_request() {
   body=$(read_request_body "$@") || return
   body=$(normalize_request "$body") || return
-  post_chat_json "$body"
+  post_openai_json 'chat/completions' "$body"
+}
+
+cmd_response() {
+  body=$(read_request_body "$@") || return
+  body=$(normalize_request "$body") || return
+  post_openai_json 'responses' "$body"
 }
 
 cmd_chat() {
@@ -169,7 +183,7 @@ cmd_chat() {
       }
     ')
 
-  response=$(post_chat_json "$body") || return
+  response=$(post_openai_json 'chat/completions' "$body") || return
 
   if ! assistant=$(printf '%s' "$response" |
       jq -er '.choices[0].message.content | select(type == "string")' 2>/dev/null); then
@@ -220,6 +234,7 @@ fi
 case "$command" in
   chat) cmd_chat "$@" ;;
   request) cmd_request "$@" ;;
+  response) cmd_response "$@" ;;
   doctor) cmd_doctor "$@" ;;
   help|-h|--help) usage ;;
   *)
