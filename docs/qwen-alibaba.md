@@ -74,16 +74,55 @@ Prompt from standard input:
 git diff | ysh bin/qwen_alibaba chat
 ```
 
-Raw OpenAI-compatible request, preserving the complete response including token
-usage and any provider-returned metadata:
+Raw OpenAI-compatible Chat Completions request, preserving the complete
+response including token usage and any provider-returned metadata:
 
 ```sh
 ysh bin/qwen_alibaba request request.json
 cat request.json | ysh bin/qwen_alibaba request -
 ```
 
-The raw request path is intentional. The later agent loop will need to own its
-conversation state instead of hiding it behind a convenience prompt wrapper.
+Raw Responses API request:
+
+```sh
+ysh bin/qwen_alibaba response response.json
+cat response.json | ysh bin/qwen_alibaba response -
+```
+
+The raw request paths are intentional. The later agent loop will need to own
+its conversation state instead of hiding it behind a convenience prompt wrapper.
+
+## Live Grease endpoint probes
+
+The branch includes two opt-in Grease/YSH scripts:
+
+```sh
+ysh scripts/qwen-alibaba-chat-live.ysh
+ysh scripts/qwen-alibaba-responses-live.ysh
+```
+
+or through Make:
+
+```sh
+make test-qwen-live
+```
+
+These are paid live calls and therefore are not dependencies of `make test`.
+Each sends a very small sentinel prompt through the configured
+`qwen3-coder-next` endpoint and emits a compact receipt containing the
+requested/returned model, response ID, token counts, and endpoint-specific
+status.
+
+The Chat Completions probe establishes only live text generation through
+`/chat/completions`.
+
+The Responses probe is intentionally separate. Alibaba's current Responses API
+documentation says text-generation models outside its full-feature list receive
+only basic compatibility. A successful
+`scripts/qwen-alibaba-responses-live.ysh` run therefore establishes only that
+the exact configured `qwen3-coder-next` endpoint accepted a basic Responses
+text request. It does not establish built-in tools, custom tool calling, session
+caching, or other Responses agent features.
 
 ## Tool-use uncertainty
 
