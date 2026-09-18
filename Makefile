@@ -5,6 +5,7 @@ SHELL ?= /bin/sh
 .PHONY: test test-sms install
 
 test:
+	sh test/grease-boundary-test.sh
 	bash test/az-test.sh
 	bash test/abe-test.sh
 	bash test/aa-test.sh
