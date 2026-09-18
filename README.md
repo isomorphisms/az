@@ -104,6 +104,11 @@ ysh bin/az doctor
 ysh bin/aa doctor
 ysh bin/qwen_alibaba doctor
 make test
+
+# Paid live endpoint probes; never run by make test.
+make test-qwen-live-chat
+make test-qwen-live-responses
+
 sudo make install
 ```
 
