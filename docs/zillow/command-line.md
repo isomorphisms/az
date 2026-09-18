@@ -8,9 +8,9 @@ this repository can describe exactly without scraping the consumer web site.
 No credentials are needed.
 
 ```sh
-ysh bin/zillow research list
-ysh bin/zillow research url zhvi-metro-all-homes-mid-tier-smoothed-seasonally-adjusted-monthly
-ysh bin/zillow research download zhvi-metro-all-homes-mid-tier-smoothed-seasonally-adjusted-monthly > zhvi.csv
+grease bin/zillow research list
+grease bin/zillow research url zhvi-metro-all-homes-mid-tier-smoothed-seasonally-adjusted-monthly
+grease bin/zillow research download zhvi-metro-all-homes-mid-tier-smoothed-seasonally-adjusted-monthly > zhvi.csv
 ```
 
 `research list` prints tab-separated dataset identifier, description, and exact
@@ -53,17 +53,17 @@ ZILLOW_PARTNER_ID=...
 The three currently documented GET methods are exposed as:
 
 ```sh
-ysh bin/zillow mortgage rates durationDays=30 includeCurrentRate=true
-ysh bin/zillow mortgage current-rates
-ysh bin/zillow mortgage lender-reviews nmlsId=123456 reviewLimit=10
+grease bin/zillow mortgage rates durationDays=30 includeCurrentRate=true
+grease bin/zillow mortgage current-rates
+grease bin/zillow mortgage lender-reviews nmlsId=123456 reviewLimit=10
 ```
 
 Use `mortgage url` to inspect the exact request without sending it:
 
 ```sh
-ysh bin/zillow mortgage url rates durationDays=30 includeCurrentRate=true
-ysh bin/zillow mortgage url current-rates 'queries={"default":{"loanPurpose":"Purchase"}}'
-ysh bin/zillow mortgage url lender-reviews nmlsId=123456 'companyName=Example Bank'
+grease bin/zillow mortgage url rates durationDays=30 includeCurrentRate=true
+grease bin/zillow mortgage url current-rates 'queries={"default":{"loanPurpose":"Purchase"}}'
+grease bin/zillow mortgage url lender-reviews nmlsId=123456 'companyName=Example Bank'
 ```
 
 Parameter names are whitelisted per method and values are URI-encoded. The
