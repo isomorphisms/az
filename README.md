@@ -30,6 +30,9 @@ ysh bin/abe used 9780131457577
 
 # On the AA branch, once an Anna's Archive member key is in AA:
 ysh bin/aa resolve 6722faecdb9370ad0d2e447cce370950
+
+# Once an Alibaba Model Studio API key is configured:
+ysh bin/qwen_alibaba chat 'Inspect this repository for a narrow mechanical repair.'
 ```
 
 `price` uses Amazon Creators API `GetItems` with `OffersV2` and appends one row
@@ -91,13 +94,15 @@ and Far East Login-with-Amazon token endpoints respectively. Access tokens are
 cached locally until shortly before their one-hour expiry instead of requesting
 a new token for every price lookup.
 
-Amazon and AbeBooks still use `curl`. The AA adapter uses ICU only; `jq` is used
-for JSON and URI encoding. The remaining small-text tools are `grep`, `sed`,
-`awk`, `tr`, and `date` as needed by each command.
+Amazon, AbeBooks, and the initial Alibaba Qwen adapter use `curl`. The AA
+adapter uses ICU only; `jq` is used for JSON and URI encoding. The remaining
+small-text tools are `grep`, `sed`, `awk`, `tr`, and `date` as needed by
+each command.
 
 ```sh
 ysh bin/az doctor
 ysh bin/aa doctor
+ysh bin/qwen_alibaba doctor
 make test
 sudo make install
 ```
@@ -112,6 +117,22 @@ ICU without printing the resolved URL in the Actions log.
 
 See [`docs/annas-archive.md`](docs/annas-archive.md) for the transport boundary,
 trusted-host rule, and current acceptance limits.
+
+## Alibaba Qwen configuration
+
+`bin/qwen_alibaba` calls Alibaba Cloud Model Studio through its
+OpenAI-compatible Chat Completions interface. The default is
+`qwen3-coder-next`; raw JSON requests are also supported for the later
+repository-maintenance loop.
+
+Copy `config/qwen-secret.example` to `~/.config/az/qwen-secret` and put the
+Model Studio API key in `DASHSCOPE_API_KEY`. The adapter refuses to send the
+key to hosts outside the known Alibaba Model Studio domain families.
+
+The checked-in tests use a fake HTTP transport and spend no API money. They do
+not claim live authentication or inference. See
+[`docs/qwen-alibaba.md`](docs/qwen-alibaba.md) for the current endpoint,
+model, tool-use uncertainty, and evidence boundary.
 
 ## Product identity
 
