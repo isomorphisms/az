@@ -35,3 +35,21 @@ The files under `docs/zillow/` document source locations and interface shape;
 they are not live-service acceptance. A documentation fetch, CSV fixture, or
 mock response does not establish permission, authentication, or successful API
 execution.
+
+## Alibaba Qwen boundary
+
+`bin/qwen_alibaba` owns the direct Alibaba Cloud Model Studio request boundary.
+Keep `qwen3-coder-next` as the default model for this work; do not silently
+downgrade to a smaller model to save money.
+
+Never send `DASHSCOPE_API_KEY` to an arbitrary OpenAI-compatible endpoint.
+Credential-bearing requests must pass the adapter's Alibaba-host check.
+
+Fake-transport tests establish request construction and host-policy behavior
+only. They are not live Model Studio acceptance. Record real authentication,
+model availability, inference, and any tool-calling behavior as separate
+evidence.
+
+Do not give the model GitHub merge authority merely because API inference works.
+The planned repository-maintenance worker keeps GitHub credentials and
+deterministic merge/permission gates outside the model process.
