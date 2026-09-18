@@ -1,4 +1,4 @@
-#!/usr/bin/env ysh
+#!/usr/bin/env grease
 
 # Anna's Archive member fast-download URL resolver.
 # HTTP transport is ICU only. There is deliberately no curl fallback.
