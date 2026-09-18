@@ -1,3 +1,4 @@
 config/amazon-secret
+config/qwen-secret
 .state/
 .cache/
