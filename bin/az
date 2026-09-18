@@ -7,8 +7,12 @@ set -eu
 set -o pipefail
 
 TAB=$(printf '\t')
-SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-REPO_DIR=$(dirname -- "$SCRIPT_DIR")
+case "$0" in
+  */*) script_parent=${0%/*} ;;
+  *) script_parent=. ;;
+esac
+SCRIPT_DIR=$(CDPATH= cd -- "$script_parent" && pwd)
+REPO_DIR=${SCRIPT_DIR%/*}
 
 # Public defaults live with the program and are safe to publish.
 if test -f "$REPO_DIR/config/amazon-public"; then
@@ -111,7 +115,7 @@ history_product() {
 }
 
 amazon_link() {
-  asin=$(extract_asin "$1") || return
+  asin=$(extract_asin "$1")
   printf 'https://%s/dp/%s?tag=%s\n' "$AZ_MARKETPLACE" "$asin" "$AZ_PARTNER_TAG"
 }
 
@@ -151,34 +155,37 @@ EOF
 }
 
 cached_token() {
-  test -f "$AZ_TOKEN_FILE" || return 1
+  # A cache miss is ordinary output absence, not control-flow failure.  Keeping
+  # this helper successful lets callers check the value without putting a
+  # function in a strict_errexit conditional context.
+  test -f "$AZ_TOKEN_FILE" || return 0
 
-  IFS=$TAB read -r expires token < "$AZ_TOKEN_FILE" || return 1
+  IFS=$TAB read -r expires token < "$AZ_TOKEN_FILE" || return 0
   case "$expires" in
-    ''|*[!0-9]*) return 1 ;;
+    ''|*[!0-9]*) return 0 ;;
   esac
 
   now=$(date +%s)
   # Leave a one-minute margin so a token cannot expire halfway through a call.
   if test "$now" -lt "$((expires - 60))" && test -n "$token"; then
     printf '%s\n' "$token"
-    return 0
   fi
 
-  return 1
+  return 0
 }
 
 amazon_token() {
   need curl
   need jq
-  require_amazon_credentials || return
+  require_amazon_credentials
 
-  if token=$(cached_token); then
+  token=$(cached_token)
+  if test -n "$token"; then
     printf '%s\n' "$token"
     return 0
   fi
 
-  endpoint=$(credential_endpoint) || return
+  endpoint=$(credential_endpoint)
   payload=$(jq -cn \
     --arg id "$AZ_AMAZON_CREDENTIAL_ID" \
     --arg secret "$AZ_AMAZON_CREDENTIAL_SECRET" \
@@ -217,7 +224,7 @@ amazon_post() {
   body=$2
 
   need curl
-  token=$(amazon_token) || return
+  token=$(amazon_token)
 
   if ! response=$(curl --fail-with-body -sS \
       -X POST "$AZ_CREATORS_API_BASE/$operation" \
@@ -251,14 +258,22 @@ record_observation() {
     printf 'observed_at\tsource\tmethod\tproduct\tamount\tcurrency\tbuy_url\n' > "$AZ_PRICE_FILE"
   fi
 
+  safe_observed_at=$(safe_field "$observed_at")
+  safe_source=$(safe_field "$source")
+  safe_method=$(safe_field "$method")
+  safe_product=$(safe_field "$product")
+  safe_amount=$(safe_field "$amount")
+  safe_currency=$(safe_field "$currency")
+  safe_url=$(safe_field "$url")
+
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-    "$(safe_field "$observed_at")" \
-    "$(safe_field "$source")" \
-    "$(safe_field "$method")" \
-    "$(safe_field "$product")" \
-    "$(safe_field "$amount")" \
-    "$(safe_field "$currency")" \
-    "$(safe_field "$url")" >> "$AZ_PRICE_FILE"
+    "$safe_observed_at" \
+    "$safe_source" \
+    "$safe_method" \
+    "$safe_product" \
+    "$safe_amount" \
+    "$safe_currency" \
+    "$safe_url" >> "$AZ_PRICE_FILE"
 }
 
 cmd_link() {
@@ -269,7 +284,7 @@ cmd_link() {
 cmd_price() {
   test "$#" -eq 1 || { usage >&2; return 2; }
   need jq
-  asin=$(extract_asin "$1") || return
+  asin=$(extract_asin "$1")
 
   body=$(jq -cn \
     --arg asin "$asin" \
@@ -278,7 +293,7 @@ cmd_price() {
     '{itemIds:[$asin], itemIdType:"ASIN", marketplace:$marketplace, partnerTag:$tag,
       resources:["offersV2.listings.price","offersV2.listings.isBuyBoxWinner"]}')
 
-  response=$(amazon_post 'catalog/v1/getItems' "$body") || return
+  response=$(amazon_post 'catalog/v1/getItems' "$body")
 
   row=$(printf '%s' "$response" | jq -r '
     .itemsResult.items[0] // empty
@@ -322,7 +337,7 @@ cmd_search() {
       marketplace:$marketplace, partnerTag:$tag,
       resources:["itemInfo.title","offersV2.listings.price","offersV2.listings.isBuyBoxWinner"]}')
 
-  response=$(amazon_post 'catalog/v1/searchItems' "$body") || return
+  response=$(amazon_post 'catalog/v1/searchItems' "$body")
 
   printf 'asin\tamount\tcurrency\tbuy_url\ttitle\n'
   printf '%s' "$response" | jq -r '
@@ -339,7 +354,7 @@ cmd_search() {
 
 cmd_history() {
   test "$#" -eq 1 || { usage >&2; return 2; }
-  product=$(history_product "$1") || return
+  product=$(history_product "$1")
 
   if ! test -f "$AZ_PRICE_FILE"; then
     printf 'az: no price ledger yet: %s\n' "$AZ_PRICE_FILE" >&2
