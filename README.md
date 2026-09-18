@@ -7,29 +7,29 @@ small amount of structured data, reduces it to a price observation, and leaves
 the long-lived history in ordinary local files that IB or other programs can
 index later.
 
-The scripts are Grease/YSH-compatible shell and currently use the `ysh` entry
-point supplied by the Grease/Oils tree.
+The scripts target Grease and use the `grease` entry point. Consumers should
+not invoke the inherited implementation runtime directly.
 
 ## Today
 
 ```sh
 # Public affiliate link, no API credentials required.
-ysh bin/az link B012345678
+grease bin/az link B012345678
 
 # Record something you saw yourself.
-ysh bin/az observe B012345678 19.99
+grease bin/az observe B012345678 19.99
 
 # Once Creators credentials are configured:
-ysh bin/az price B012345678
-ysh bin/az search 'K&R C programming'
-ysh bin/az history B012345678
+grease bin/az price B012345678
+grease bin/az search 'K&R C programming'
+grease bin/az history B012345678
 
 # Once the AbeBooks client key is configured:
-ysh bin/abe 9780131457577
-ysh bin/abe used 9780131457577
+grease bin/abe 9780131457577
+grease bin/abe used 9780131457577
 
 # On the AA branch, once an Anna's Archive member key is in AA:
-ysh bin/aa resolve 6722faecdb9370ad0d2e447cce370950
+grease bin/aa resolve 6722faecdb9370ad0d2e447cce370950
 ```
 
 `price` uses Amazon Creators API `GetItems` with `OffersV2` and appends one row
@@ -96,8 +96,8 @@ for JSON and URI encoding. The remaining small-text tools are `grep`, `sed`,
 `awk`, `tr`, and `date` as needed by each command.
 
 ```sh
-ysh bin/az doctor
-ysh bin/aa doctor
+grease bin/az doctor
+grease bin/aa doctor
 make test
 sudo make install
 ```
