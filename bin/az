@@ -1,6 +1,6 @@
-#!/usr/bin/env ysh
+#!/usr/bin/env grease
 
-# Small Grease/YSH Amazon price tool.  Keep this in the shell-and-Unix-tools
+# Small Grease Amazon price tool.  Keep this in the shell-and-Unix-tools
 # layer: curl for HTTP, jq for JSON, append-only TSV for observations.
 
 set -eu
